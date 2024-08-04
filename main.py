@@ -70,7 +70,7 @@ controls = {
     'volume up': [61],
     'volume down': [45],
     'mute': [pygame.K_0],
-    'dementia': [pygame.K_p]
+    'dementia': [pygame.K_d]
 }
 
 if osPath.isfile('controls.json'):
@@ -115,6 +115,7 @@ volume = 1.0
 AREpaused = False
 AREpauseLength = 0
 linesCleared = 0
+demeter = 0
 
 score = 0
 lines = 0
@@ -338,7 +339,7 @@ class Shapes:
         out = []
         for shape in list(all_shapes.values()):
             out.insert(randint(0,len(out)),shape)
-        print(out)
+        # print(out)
         return out
     bag = []
     def fromBag() -> shape:
@@ -461,10 +462,10 @@ def getCollision():
         x = 0
     del tempMap
 
-def hsv_to_rgb( h:int, s:int, v:int, a:int=255 ) -> tuple:
-    out = pygame.Color(0)
-    out.hsva = (h,s,v,a)
-    return (out.r, out.g, out.b, out.a)
+# def hsv_to_rgb( h:int, s:int, v:int, a:int=255 ) -> tuple:
+#     out = pygame.Color(0)
+#     out.hsva = (h,s,v,a)
+#     return (out.r, out.g, out.b, out.a)
 
 def overflowNum(value, maxValue):
     # Calculate the range size
@@ -528,6 +529,7 @@ while replay:
     AREpaused = False
     AREpauseLength = 0
     linesCleared = 0
+    demeter = 0
 
     score = 0
     lines = 0
@@ -603,7 +605,8 @@ while replay:
                         pygame.mixer.music.unpause()
 
                 if event.key in controls['dementia']:
-                    dementia = not dementia
+                    dementia = False
+                    
 
                 if event.key in controls['reset']:
                     reset = True
@@ -791,22 +794,23 @@ while replay:
         layer3 = pygame.surface.Surface((256,224), pygame.SRCALPHA)
         for id,pos in {'T':(26,85),'J':(26,100),'Z':(26,117),'O':(29,133),'S':(26,149),'L':(26,164),'I':(24,184)}.items():
             layer3.blit(all_shapes[id].stat_sprite,pos)
-        if lvl == 0 or not coloured:
-            layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
-            layer1.fill(hsv_to_rgb(300,41,100,0), special_flags=pygame.BLEND_RGB_MULT)
-            layer2 = pygame.image.load('images/gui/bg1.png').convert_alpha()
-            layer2.fill(hsv_to_rgb(300,20,100,0), special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(layer1,(0,0))
-            screen.blit(layer2,(0,0))
-            screen.blit(layer3,(0,0))
-        else:
-            screen.blit(pygame.image.load('images/gui/bg.png').convert_alpha(),(0,0))
-            screen.fill(hsv_to_rgb(overflowNum(lvl*12,360),41,100,0), special_flags=pygame.BLEND_RGB_MULT)
-            layer2 = pygame.image.load('images/gui/bg1.png').convert_alpha()
-            layer2.fill(hsv_to_rgb(overflowNum(lvl*12,360),20,100,0), special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(layer2,(0,0))
-            layer3.fill(hsv_to_rgb(overflowNum(lvl*12,360),20,100,0), special_flags=pygame.BLEND_RGB_MULT)
-            screen.blit(layer3,(0,0))
+        # if lvl == 0 or not coloured:
+        layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
+        #     layer1.fill(hsv_to_rgb(300,41,100,0), special_flags=pygame.BLEND_RGB_MULT)
+        #     layer2 = pygame.image.load('images/gui/bg1.png').convert_alpha()
+        #     layer2.fill(hsv_to_rgb(300,20,100,0), special_flags=pygame.BLEND_RGB_MULT)
+        
+        # else:
+        #     screen.blit(pygame.image.load('images/gui/bg.png').convert_alpha(),(0,0))
+        #     screen.fill(hsv_to_rgb(overflowNum(lvl*12,360),41,100,0), special_flags=pygame.BLEND_RGB_MULT)
+        # layer2 = pygame.image.load('images/gui/bg1.png').convert_alpha()
+        screen.blit(layer1,(0,0))
+        # screen.blit(layer2,(0,0))
+        screen.blit(layer3,(0,0))
+        #     layer2.fill(hsv_to_rgb(overflowNum(lvl*12,360),20,100,0), special_flags=pygame.BLEND_RGB_MULT)
+        #     screen.blit(layer2,(0,0))
+        #     layer3.fill(hsv_to_rgb(overflowNum(lvl*12,360),20,100,0), special_flags=pygame.BLEND_RGB_MULT)
+        #     screen.blit(layer3,(0,0))
         screen.blit(pygame.image.load('images/gui/staticText.png').convert_alpha(),(0,0))
         writeNums((152,16),lines,3)
         writeNums((192,32),score,6)
