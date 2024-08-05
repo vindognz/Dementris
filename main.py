@@ -190,7 +190,7 @@ def flashStamps():
             if not dementia:
                 screen.blit(sprite.image, pos)
         else:
-            pygame.draw.rect(screen, 'white', (pos[0], pos[1], 7, 7))
+            pygame.draw.rect(screen, 'white', (pos[0], pos[1], 8, 8))
 
 # Draw Text
 def writeNums(pos: tuple, num: int, length: int,color=(255,255,255)):
@@ -359,7 +359,7 @@ def getInp(control_scheme):
 
 # Clearing Lines
 def clearLine(y: int):
-    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed
+    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed,demeter
     sounds['line'].play()
     linesCleared += 1
     AREpaused = True
@@ -377,6 +377,9 @@ def clearLine(y: int):
             flash_stamps.append((pos,piece))
     stamps = temp
     lines += 1
+    demeter += 2
+    if demeter > 80:
+        demeter = 80
     if lines % 10 == 0:
         lvl += 1
         if lvl < 9:
@@ -462,11 +465,6 @@ def getCollision():
         x = 0
     del tempMap
 
-# def hsv_to_rgb( h:int, s:int, v:int, a:int=255 ) -> tuple:
-#     out = pygame.Color(0)
-#     out.hsva = (h,s,v,a)
-#     return (out.r, out.g, out.b, out.a)
-
 def overflowNum(value, maxValue):
     # Calculate the range size
     range_size = maxValue + 1
@@ -508,7 +506,8 @@ class Timer:
 timers = {
     'fall': Timer(speed),
     'move': Timer(16),
-    'soft down': Timer(2)
+    'soft down': Timer(2),
+    "demeter": Timer(0.25*60)
 }
 # - Timers - #
 
@@ -556,6 +555,7 @@ while replay:
     timers['fall'].activate()
     timers['move'].deactivate()
     timers['soft down'].deactivate()
+    timers['demeter'].deactivate()
     while running and (not reset):
         for id,sound in sounds.items():
             sound.set_volume(volume)
@@ -597,6 +597,7 @@ while replay:
                     coloured = not coloured
                 if event.key in controls['toggle fps']:
                     show_fps = not show_fps
+                    demeter += 50
                 if event.key  in controls['pause']:
                     paused = not paused
                     if paused:
@@ -605,8 +606,10 @@ while replay:
                         pygame.mixer.music.unpause()
 
                 if event.key in controls['dementia']:
-                    dementia = False
-                    
+                    dementia = not dementia
+                    if (not dementia) and demeter <= 0:
+                        dementia = True
+                        demeter = 0
 
                 if event.key in controls['reset']:
                     reset = True
@@ -794,23 +797,9 @@ while replay:
         layer3 = pygame.surface.Surface((256,224), pygame.SRCALPHA)
         for id,pos in {'T':(26,85),'J':(26,100),'Z':(26,117),'O':(29,133),'S':(26,149),'L':(26,164),'I':(24,184)}.items():
             layer3.blit(all_shapes[id].stat_sprite,pos)
-        # if lvl == 0 or not coloured:
         layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
-        #     layer1.fill(hsv_to_rgb(300,41,100,0), special_flags=pygame.BLEND_RGB_MULT)
-        #     layer2 = pygame.image.load('images/gui/bg1.png').convert_alpha()
-        #     layer2.fill(hsv_to_rgb(300,20,100,0), special_flags=pygame.BLEND_RGB_MULT)
-        
-        # else:
-        #     screen.blit(pygame.image.load('images/gui/bg.png').convert_alpha(),(0,0))
-        #     screen.fill(hsv_to_rgb(overflowNum(lvl*12,360),41,100,0), special_flags=pygame.BLEND_RGB_MULT)
-        # layer2 = pygame.image.load('images/gui/bg1.png').convert_alpha()
         screen.blit(layer1,(0,0))
-        # screen.blit(layer2,(0,0))
         screen.blit(layer3,(0,0))
-        #     layer2.fill(hsv_to_rgb(overflowNum(lvl*12,360),20,100,0), special_flags=pygame.BLEND_RGB_MULT)
-        #     screen.blit(layer2,(0,0))
-        #     layer3.fill(hsv_to_rgb(overflowNum(lvl*12,360),20,100,0), special_flags=pygame.BLEND_RGB_MULT)
-        #     screen.blit(layer3,(0,0))
         screen.blit(pygame.image.load('images/gui/staticText.png').convert_alpha(),(0,0))
         writeNums((152,16),lines,3)
         writeNums((192,32),score,6)
@@ -831,6 +820,8 @@ while replay:
             else:
                 writeNums((2,0),int(clock.get_fps()),2,(255,255,255))
 
+        pygame.draw.rect(screen,"#ff9f43", pygame.Rect(96, 211, demeter, 9))
+
         if paused and running:
             screen.blit(paused_overlay,(0,0))
         if not running:
@@ -840,8 +831,14 @@ while replay:
         display.blit(scaled, (0, 0))
         pygame.display.flip()
 
-
         if (not paused) and (not AREpaused):
+            if not dementia and demeter > 0:
+                if timers['demeter'].finished:
+                    timers['demeter'].activate()
+                    demeter -= 2
+            if demeter <= 0:
+                demeter = 0
+                dementia = True
             # Collision and line clearing
             getCollision()
 
