@@ -465,11 +465,10 @@ def getCollision():
         x = 0
     del tempMap
 
+# Wraps provided value around, within the range
 def overflowNum(value, maxValue):
-    # Calculate the range size
     range_size = maxValue + 1
     
-    # Wrap the value around within the range
     if value < 0:
         value = maxValue - ((0 - value - 1) % range_size) - 1
     elif value > maxValue:
@@ -507,7 +506,7 @@ timers = {
     'fall': Timer(speed),
     'move': Timer(16),
     'soft down': Timer(2),
-    "demeter": Timer(0.25*60)
+    "demeter": Timer(0.5*60)
 }
 # - Timers - #
 
@@ -598,7 +597,7 @@ while replay:
                 if event.key in controls['toggle fps']:
                     show_fps = not show_fps
                     demeter += 50
-                if event.key  in controls['pause']:
+                if event.key in controls['pause']:
                     paused = not paused
                     if paused:
                         pygame.mixer.music.pause()
