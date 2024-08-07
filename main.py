@@ -1,6 +1,6 @@
 # ~ Imports ~ #
 import pygame
-from random import randint
+from random import shuffle
 from os import environ as osEnviron
 from os import path as osPath
 from copy import deepcopy
@@ -70,7 +70,7 @@ controls = {
     'volume up': [61],
     'volume down': [45],
     'mute': [pygame.K_0],
-    'dementia': [pygame.K_d]
+    'dementia': [pygame.K_x]
 }
 
 if osPath.isfile('controls.json'):
@@ -178,8 +178,6 @@ def drawStamps():
         if not dementia:
             stamps[i][1].image.set_alpha(255)
             screen.blit(stamps[i][1].image,stamps[i][0])
-            
-
 
 TotalAREpauseLength = 60
 AREFlashes = 3
@@ -336,17 +334,16 @@ class Shapes:
     Z = shape('Z','2','01x - 23')
 
     def __makeBag():
-        out = []
-        for shape in list(all_shapes.values()):
-            out.insert(randint(0,len(out)),shape)
-        # print(out)
+        out = list(all_shapes.values())
+        shuffle(out)
         return out
+    
     bag = []
+
     def fromBag() -> shape:
         if len(Shapes.bag) == 0:
             Shapes.bag = Shapes.__makeBag()
         return Shapes.bag.pop(0)
-
 
 
 def getInp(control_scheme):
@@ -534,7 +531,7 @@ while replay:
     lvl = 0
     speed = 48
     stats = {'I':0,'J':0,'L':0,'O':0,'S':0,'T':0,'Z':0}
-
+    Shapes.bag = []
     currentShape = Shapes.fromBag()
     currentShape.x = 4
     currentShape.y = 0
