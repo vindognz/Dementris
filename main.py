@@ -121,16 +121,6 @@ score = 0
 lines = 0
 lvl = 0
 speed = 48
-stats = {
-    'I':0,
-    'J':0,
-    'L':0,
-    'O':0,
-    'S':0,
-    'T':0,
-    'Z':0
-}
-
 
 
 
@@ -172,7 +162,6 @@ stamps = []
 def drawStamps():
     for i in range(len(stamps)):
         if not dementia or i < 20:
-            # stamps[i][1].image.set_alpha(round(max(0,16-i)*16))
             stamps[i][1].image.set_alpha(round(max(0,16-i)*24))
             screen.blit(stamps[i][1].image, stamps[i][0])
         if not dementia:
@@ -238,13 +227,6 @@ class Shapes:
                 rect = shape_sprite.get_rect()
                 rect.center = (17,25)
                 self.gui_sprite.blit(shape_sprite,rect)
-                self.stat_sprite = pygame.surface.Surface((6*self.width,6*self.height), pygame.SRCALPHA)
-                for piece in self.pieces:
-                    pieceSprite = pygame.surface.Surface((6,6), pygame.SRCALPHA)
-                    pieceSprite.blit(pygame.transform.scale(piece.sprite.image,(5,5)),(0,0))
-                    pygame.draw.line(pieceSprite,(0,0,0),(5,0),(5,5))
-                    pygame.draw.line(pieceSprite,(0,0,0),(0,5),(5,5))
-                    self.stat_sprite.blit(pieceSprite,(6*piece.localx,6*piece.localy))
 
                 
         def makePieces(self):
@@ -317,8 +299,6 @@ class Shapes:
             
         def stamp(self):
             for piece in self.pieces:
-                # x = 96+(8*(self.x+piece.localx))
-                # y = 40+(8*(self.y+piece.localy))
                 s = piece.sprite
                 s.globalx = self.x+piece.localx
                 s.globaly = self.y+piece.localy
@@ -462,17 +442,6 @@ def getCollision():
         x = 0
     del tempMap
 
-# Wraps provided value around, within the range
-def overflowNum(value, maxValue):
-    range_size = maxValue + 1
-    
-    if value < 0:
-        value = maxValue - ((0 - value - 1) % range_size) - 1
-    elif value > maxValue:
-        value = 1 + ((value - maxValue - 1) % range_size)
-    
-    return value
-
 replay = True
 
 # - Timers - #
@@ -530,7 +499,6 @@ while replay:
     lines = 0
     lvl = 0
     speed = 48
-    stats = {'I':0,'J':0,'L':0,'O':0,'S':0,'T':0,'Z':0}
     Shapes.bag = []
     currentShape = Shapes.fromBag()
     currentShape.x = 4
@@ -785,14 +753,13 @@ while replay:
                 break
         if running:
             screen.blit(nextShape.gui_sprite,(191,95))
+
             if holdShape != None:
                 screen.blit(holdShape.gui_sprite,(191,151))
             if show_ghost:
                 ghostShape.draw()
             currentShape.draw()
         layer3 = pygame.surface.Surface((256,224), pygame.SRCALPHA)
-        for id,pos in {'T':(26,85),'J':(26,100),'Z':(26,117),'O':(29,133),'S':(26,149),'L':(26,164),'I':(24,184)}.items():
-            layer3.blit(all_shapes[id].stat_sprite,pos)
         layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
         screen.blit(layer1,(0,0))
         screen.blit(layer3,(0,0))
@@ -800,10 +767,6 @@ while replay:
         writeNums((152,16),lines,3)
         writeNums((192,32),score,6)
         writeNums((208,72),lvl,2)
-        i = 0
-        for shape in 'TJZOSLI': # this must be in this order.
-            writeNums((48,88+16*i),stats[shape],3)
-            i += 1
 
         if show_fps:
             pygame.draw.rect(screen,(0,0,0),pygame.Rect(0,0,19,9))
@@ -860,11 +823,6 @@ while replay:
             if collided and (timers['fall'].finished or getInp('hard down')):
                 currentShape.stamp()
                 sounds['place'].play()
-                if not currentShape.id in stats.keys():
-                    stats[currentShape.id] = 0
-                stats[currentShape.id] += 1
-                if stats[currentShape.id] > 999:
-                    stats[currentShape.id] = 999
                 nextShape.x = 4
                 nextShape.y = 0
                 nextShape.rotation = 1
