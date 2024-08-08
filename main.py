@@ -117,7 +117,6 @@ AREpauseLength = 0
 linesCleared = 0
 demeter = 0
 
-score = 0
 lines = 0
 lvl = 0
 speed = 48
@@ -155,14 +154,12 @@ def getTileonMap(x,y):
 def rotateTable(table):
     return [[*r][::-1] for r in zip(*table)]
 
-
-
 # Rendering
 stamps = []
 def drawStamps():
     for i in range(len(stamps)):
-        if not dementia or i < 20:
-            stamps[i][1].image.set_alpha(round(max(0,16-i)*24))
+        if not dementia or i < demeter/10+10:
+            stamps[i][1].image.set_alpha(round(max(0,(demeter/10+10)-i)*24))
             screen.blit(stamps[i][1].image, stamps[i][0])
         if not dementia:
             stamps[i][1].image.set_alpha(255)
@@ -495,7 +492,6 @@ while replay:
     linesCleared = 0
     demeter = 0
 
-    score = 0
     lines = 0
     lvl = 0
     speed = 48
@@ -570,10 +566,11 @@ while replay:
                         pygame.mixer.music.unpause()
 
                 if event.key in controls['dementia']:
-                    dementia = not dementia
-                    if (not dementia) and demeter <= 0:
-                        dementia = True
-                        demeter = 0
+                    if not AREpaused:
+                        dementia = not dementia
+                        if (not dementia) and demeter <= 0:
+                            dementia = True
+                            demeter = 0
 
                 if event.key in controls['reset']:
                     reset = True
@@ -713,18 +710,12 @@ while replay:
                 currentShape.y += 1
                 getCollision()
                 sounds['soft_drop'].play()
-                score += 1
-                if score > 999999:
-                    score = 999999
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
-                score += 2*(ghostShape.y - currentShape.y)
                 currentShape.y = ghostShape.y
                 getCollision()
-                if score > 999999:
-                    score = 999999 
 
         # Rendering
         screen = pygame.image.load('images/gui/bg.png').convert_alpha()
@@ -755,7 +746,7 @@ while replay:
             screen.blit(nextShape.gui_sprite,(191,95))
 
             if holdShape != None:
-                screen.blit(holdShape.gui_sprite,(191,151))
+                screen.blit(holdShape.gui_sprite,(80-holdShape.gui_sprite.get_width(),95))
             if show_ghost:
                 ghostShape.draw()
             currentShape.draw()
@@ -763,10 +754,8 @@ while replay:
         layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
         screen.blit(layer1,(0,0))
         screen.blit(layer3,(0,0))
-        screen.blit(pygame.image.load('images/gui/staticText.png').convert_alpha(),(0,0))
-        writeNums((152,16),lines,3)
-        writeNums((192,32),score,6)
-        writeNums((208,72),lvl,2)
+        writeNums((59-11,72),lines,3)
+        writeNums((204,72),lvl,2)
 
         if show_fps:
             pygame.draw.rect(screen,(0,0,0),pygame.Rect(0,0,19,9))
@@ -787,7 +776,7 @@ while replay:
             screen.blit(death_overlay,(0,0))
 
         scaled = pygame.transform.scale(screen, display.get_size())
-        display.blit(scaled, (0, 0))
+        display.blit(scaled, (-8*(display.get_width()//screen.get_width()), 0))
         pygame.display.flip()
 
         if (not paused) and (not AREpaused):
@@ -813,12 +802,6 @@ while replay:
                     clearLine(i)
                     cleared_count += 1
                 i += 1
-            score += (cleared_count // 4)*(1200*(lvl+1)) # tetrises
-            score += ((cleared_count % 4) // 3)*(300*(lvl+1)) # triples
-            score += (((cleared_count % 4) % 3) // 2)*(100*(lvl+1)) # doubles 
-            score += (((cleared_count % 4) % 3) % 2)*(40*(lvl+1)) # singles
-            if score > 999999:
-                score = 999999
 
             if collided and (timers['fall'].finished or getInp('hard down')):
                 currentShape.stamp()
