@@ -353,7 +353,7 @@ def clearLine(y: int):
     lines += 1
     demeter += 2
     if demeter > 80:
-        demeter = 80
+        demeter = demeter #80
     if lines % 10 == 0:
         lvl += 1
         if lvl < 9:
@@ -768,7 +768,7 @@ while replay:
             else:
                 writeNums((2,0),int(clock.get_fps()),2,(255,255,255))
 
-        pygame.draw.rect(screen,"#ff9f43", pygame.Rect(96, 211, demeter, 9))
+        pygame.draw.rect(screen,"#78e08f", pygame.Rect(96, 211, demeter, 9))
 
         if paused and running:
             screen.blit(paused_overlay,(0,0))

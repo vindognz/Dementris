@@ -25,4 +25,4 @@ i make dementia in pytetris in pygame. i forgor if pain
 **Volume Up:** minus\
 **Volume Down:** plus\
 **Mute:** 0\
-**TOGGLE DEMENTIA:** p
+**TOGGLE DEMENTIA:** x
