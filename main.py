@@ -1,6 +1,6 @@
 # ~ Imports ~ #
 import pygame
-from random import shuffle
+from random import shuffle, randint
 from os import environ as osEnviron
 from os import path as osPath
 from copy import deepcopy
@@ -116,6 +116,9 @@ AREpaused = False
 AREpauseLength = 0
 linesCleared = 0
 demeter = 0
+
+shakeFrames = 0
+softShakeFrames = 0
 
 lines = 0
 lvl = 0
@@ -492,6 +495,9 @@ while replay:
     linesCleared = 0
     demeter = 0
 
+    shakeFrames = 0
+    softShakeFrames = 0
+
     lines = 0
     lvl = 0
     speed = 48
@@ -524,6 +530,11 @@ while replay:
         if not paused:
             for timer in timers.values():
                 timer.update()
+
+            if shakeFrames > 0:
+                shakeFrames -= 1
+            if softShakeFrames > 0:
+                softShakeFrames -= 1
         for event in pygame.event.get():
             # Detect window closed
             if event.type == pygame.QUIT:
@@ -709,12 +720,14 @@ while replay:
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
                 currentShape.y += 1
                 getCollision()
+                softShakeFrames = 2
                 sounds['soft_drop'].play()
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
                 currentShape.y = ghostShape.y
+                shakeFrames = 10
                 getCollision()
 
         # Rendering
@@ -776,7 +789,14 @@ while replay:
             screen.blit(death_overlay,(0,0))
 
         scaled = pygame.transform.scale(screen, display.get_size())
-        display.blit(scaled, (-8*(display.get_width()//screen.get_width()), 0))
+        shake = 0
+        softShake = 0
+        if not paused:
+            if shakeFrames > 0:
+                shake = randint(-20, 20)
+            if softShakeFrames > 0:
+                softShake = randint(-2, 2)
+        display.blit(scaled, (-8*(display.get_width()//screen.get_width()), shake+softShake))
         pygame.display.flip()
 
         if (not paused) and (not AREpaused):
