@@ -117,8 +117,11 @@ AREpauseLength = 0
 linesCleared = 0
 demeter = 0
 
-shakeFrames = 0
-softShakeFrames = 0
+offset = pygame.Vector2(0,0)
+lastOffset = pygame.Vector2(0,0)
+deltaTime = 0
+springConstant = 0.1
+damping = 0.1
 
 lines = 0
 lvl = 0
@@ -333,6 +336,13 @@ def getInp(control_scheme):
             return True
     return False
 
+def shakeScreen(force: pygame.Vector2):
+    global offset,lastOffset,deltaTime,springConstant,damping
+    velocity = (lastOffset - offset + force) * deltaTime
+    offset += force
+    print(offset)
+    offset += -springConstant*offset
+
 
 # Clearing Lines
 def clearLine(y: int):
@@ -495,8 +505,9 @@ while replay:
     linesCleared = 0
     demeter = 0
 
-    shakeFrames = 0
-    softShakeFrames = 0
+    offset = pygame.Vector2(0,0)
+    lastOffset = pygame.Vector2(0,0)
+    deltaTime = 0
 
     lines = 0
     lvl = 0
@@ -526,15 +537,10 @@ while replay:
         for id,sound in sounds.items():
             sound.set_volume(volume)
         pygame.mixer.music.set_volume(volume)   
-        clock.tick(frameRate)
+        deltaTime = clock.tick(frameRate)
         if not paused:
             for timer in timers.values():
                 timer.update()
-
-            if shakeFrames > 0:
-                shakeFrames -= 1
-            if softShakeFrames > 0:
-                softShakeFrames -= 1
         for event in pygame.event.get():
             # Detect window closed
             if event.type == pygame.QUIT:
@@ -720,14 +726,14 @@ while replay:
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
                 currentShape.y += 1
                 getCollision()
-                softShakeFrames = 2
+                shakeScreen(pygame.Vector2(0,-4))
                 sounds['soft_drop'].play()
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
                 currentShape.y = ghostShape.y
-                shakeFrames = 10
+                shakeScreen(pygame.Vector2(0,-15))
                 getCollision()
 
         # Rendering
@@ -789,14 +795,9 @@ while replay:
             screen.blit(death_overlay,(0,0))
 
         scaled = pygame.transform.scale(screen, display.get_size())
-        shake = 0
-        softShake = 0
-        if not paused:
-            if shakeFrames > 0:
-                shake = randint(-20, 20)
-            if softShakeFrames > 0:
-                softShake = randint(-2, 2)
-        display.blit(scaled, (-8*(display.get_width()//screen.get_width()), shake+softShake))
+        shakeScreen(pygame.Vector2(0,0))
+        display.fill('black')
+        display.blit(scaled, (-8*(display.get_width()//screen.get_width())+offset[0], offset[1]))
         pygame.display.flip()
 
         if (not paused) and (not AREpaused):
