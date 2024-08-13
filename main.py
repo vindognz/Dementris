@@ -29,24 +29,13 @@ setScale(3)
 screen = pygame.image.load('images/gui/bg.png').convert()
 paused_overlay = pygame.image.load('images/gui/paused.png').convert_alpha()
 death_overlay = pygame.image.load('images/gui/gameOver.png').convert_alpha()
-pygame.mixer.music.load('sounds/music.mp3')
 
-sounds = {
-    'move':pygame.mixer.Sound('sounds/move.mp3'),
-    'soft_drop':pygame.mixer.Sound('sounds/soft_drop.mp3'),
-    'rotate':pygame.mixer.Sound('sounds/rotate.mp3'),
-    'place':pygame.mixer.Sound('sounds/place.mp3'),
-    'line':pygame.mixer.Sound('sounds/line.mp3'),
-    'death':pygame.mixer.Sound('sounds/death.mp3'),
-    'fall':pygame.mixer.Sound('sounds/fall.mp3')
-}
 pieces = [
     pygame.image.load('images/pieces/0.png').convert_alpha(),
     pygame.image.load('images/pieces/1.png').convert_alpha(),
     pygame.image.load('images/pieces/2.png').convert_alpha(),
     pygame.image.load('images/pieces/ghost.png').convert_alpha()
 ]
-
 
 # - Load controls - #
 controls = {
@@ -61,15 +50,11 @@ controls = {
     'reset': [pygame.K_r],
     'quit': [pygame.K_ESCAPE],
     'toggle ghost': [pygame.K_g],
-    'toggle colour': [pygame.K_h],
     'toggle fps': [pygame.K_j],
     'scale 1': [pygame.K_1],
     'scale 2': [pygame.K_2],
     'scale 3': [pygame.K_3],
     'scale 4': [pygame.K_4],
-    'volume up': [61],
-    'volume down': [45],
-    'mute': [pygame.K_0],
     'dementia': [pygame.K_x]
 }
 
@@ -121,7 +106,7 @@ offset = pygame.Vector2(0,0)
 lastOffset = pygame.Vector2(0,0)
 deltaTime = 0
 springConstant = 0.1
-damping = 0.1
+damping = 1
 
 lines = 0
 lvl = 0
@@ -338,16 +323,21 @@ def getInp(control_scheme):
 
 def shakeScreen(force: pygame.Vector2):
     global offset,lastOffset,deltaTime,springConstant,damping
-    velocity = (lastOffset - offset + force) * deltaTime
-    offset += force
-    print(offset)
-    offset += -springConstant*offset
+    if force.magnitude() == 0:
+        velocity = (lastOffset - offset) * deltaTime
+    else:
+        velocity = force * deltaTime
+        offset = -force
+    lastOffset = offset
+    velocity += (-springConstant*offset - damping*velocity)
+    print(velocity)
+    offset += velocity * deltaTime
+
 
 
 # Clearing Lines
 def clearLine(y: int):
     global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed,demeter
-    sounds['line'].play()
     linesCleared += 1
     AREpaused = True
     AREpauseLength = TotalAREpauseLength
@@ -369,15 +359,15 @@ def clearLine(y: int):
         demeter = demeter #80
     if lines % 10 == 0:
         lvl += 1
-        if lvl < 9:
-            speed -= 5
-        elif lvl == 9:
-            speed -= 2
-        elif lvl in [10,13,16,19,29]:
-            speed -= 1
-        if lvl > 99:
-            lvl = 99
-            speed = 48
+        # if lvl < 9:
+        #     speed -= 5
+        # elif lvl == 9:
+        #     speed -= 2
+        # elif lvl in [10,13,16,19,29]:
+        #     speed -= 1
+        # if lvl > 99:
+        #     lvl = 99
+        #     speed = 48
     if lines > 999:
         lines = 999
 
@@ -527,16 +517,11 @@ while replay:
     holdCount = 0
     ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
 
-    pygame.mixer.music.play(-1)
-
     timers['fall'].activate()
     timers['move'].deactivate()
     timers['soft down'].deactivate()
     timers['demeter'].deactivate()
-    while running and (not reset):
-        for id,sound in sounds.items():
-            sound.set_volume(volume)
-        pygame.mixer.music.set_volume(volume)   
+    while running and (not reset):  
         deltaTime = clock.tick(frameRate)
         if not paused:
             for timer in timers.values():
@@ -547,21 +532,6 @@ while replay:
                 closed = True
                 replay = False
             if event.type == pygame.KEYDOWN:
-                if event.key in controls['volume up']:
-                    volume += 0.1
-                    if volume < 0:
-                        volume = 0
-                    elif volume > 1.0:
-                        volume = 1.0
-                elif event.key in controls['volume down']:
-                    volume -= 0.1
-                    if volume < 0:
-                        volume = 0
-                    elif volume > 1.0:
-                        volume = 1.0
-                elif event.key in controls['mute']:
-                    volume = 0
-
                 if event.key in controls['scale 1']:
                     setScale(1)
                 elif event.key in controls['scale 2']:
@@ -570,17 +540,9 @@ while replay:
                     setScale(3)
                 elif event.key in controls['scale 4']:
                     setScale(4)
-                if event.key in controls['toggle colour']:
-                    coloured = not coloured
                 if event.key in controls['toggle fps']:
                     show_fps = not show_fps
                     demeter += 50
-                if event.key in controls['pause']:
-                    paused = not paused
-                    if paused:
-                        pygame.mixer.music.pause()
-                    else:
-                        pygame.mixer.music.unpause()
 
                 if event.key in controls['dementia']:
                     if not AREpaused:
@@ -626,7 +588,6 @@ while replay:
                             if not i:
                                 currentShape.x = oldX
                     if i:
-                        sounds['rotate'].play()
                         getCollision()
                     else:
                         currentShape.rotate(1)
@@ -661,7 +622,6 @@ while replay:
                             if not i:
                                 currentShape.x = oldX
                     if i:
-                        sounds['rotate'].play()
                         getCollision()
                     else:
                         currentShape.rotate(-1)
@@ -704,7 +664,6 @@ while replay:
             if getInp('move left') and (not getInp('move right')) and (not left_collided) and timers['move'].finished:
                 currentShape.x -= 1
                 getCollision()
-                sounds['move'].play()
                 if holding_input == False:
                     timers['move'].duration = 16
                 else:
@@ -714,7 +673,6 @@ while replay:
             if getInp('move right') and (not getInp('move left')) and (not right_collided) and timers['move'].finished:
                 currentShape.x += 1
                 getCollision()
-                sounds['move'].play()
                 if holding_input == False:
                     timers['move'].duration = 16
                 else:
@@ -726,14 +684,13 @@ while replay:
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
                 currentShape.y += 1
                 getCollision()
-                shakeScreen(pygame.Vector2(0,-4))
-                sounds['soft_drop'].play()
+                shakeScreen(pygame.Vector2(0,-10))
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
                 currentShape.y = ghostShape.y
-                shakeScreen(pygame.Vector2(0,-15))
+                shakeScreen(pygame.Vector2(0,-50))
                 getCollision()
 
         # Rendering
@@ -797,7 +754,7 @@ while replay:
         scaled = pygame.transform.scale(screen, display.get_size())
         shakeScreen(pygame.Vector2(0,0))
         display.fill('black')
-        display.blit(scaled, (-8*(display.get_width()//screen.get_width())+offset[0], offset[1]))
+        display.blit(scaled, (-8*(display.get_width()//screen.get_width())+offset[0], offset[1]-50))
         pygame.display.flip()
 
         if (not paused) and (not AREpaused):
@@ -826,7 +783,6 @@ while replay:
 
             if collided and (timers['fall'].finished or getInp('hard down')):
                 currentShape.stamp()
-                sounds['place'].play()
                 nextShape.x = 4
                 nextShape.y = 0
                 nextShape.rotation = 1
@@ -839,7 +795,6 @@ while replay:
                     holding_down = True
             elif timers['fall'].finished and not ((not holding_down) and (getInp('soft down') or getInp('hard down'))):
                 currentShape.y += 1
-                sounds['fall'].play()
                 timers['fall'].duration = speed
                 timers['fall'].activate()
         if AREpaused and AREpauseLength > 0:
@@ -865,9 +820,6 @@ while replay:
             running = False
     # Window closed logic
     else:
-        pygame.mixer.music.stop()
-        if not reset:
-            sounds['death'].play()
         game_over = True
         while (game_over and not closed) and not reset:
             for event in pygame.event.get():
