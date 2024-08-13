@@ -14,16 +14,10 @@ clock = pygame.time.Clock()
 # Create window
 (display_width,display_height) = (256,224)
 
-# Window scale
-def setScale(scale: int):
-    osEnviron['SDL_VIDEO_CENTERED'] = '1'
-    pygame.display.set_mode((scale*display_width, scale*display_height))
-
-display = pygame.display.set_mode((display_width, display_height))
+display = pygame.display.set_mode((3*display_width, 3*display_height))
 pygame.display.set_caption('PyTetris')
 icon = pygame.image.load('images/gui/icon.png').convert_alpha()
 pygame.display.set_icon(icon)
-setScale(3)
 
 # Load assets
 screen = pygame.image.load('images/gui/bg.png').convert()
@@ -50,11 +44,6 @@ controls = {
     'reset': [pygame.K_r],
     'quit': [pygame.K_ESCAPE],
     'toggle ghost': [pygame.K_g],
-    'toggle fps': [pygame.K_j],
-    'scale 1': [pygame.K_1],
-    'scale 2': [pygame.K_2],
-    'scale 3': [pygame.K_3],
-    'scale 4': [pygame.K_4],
     'dementia': [pygame.K_x]
 }
 
@@ -93,10 +82,7 @@ running = True
 closed = False
 paused = False
 reset = False
-coloured = True
-show_fps = False
 dementia = True
-volume = 1.0
 AREpaused = False
 AREpauseLength = 0
 linesCleared = 0
@@ -330,10 +316,7 @@ def shakeScreen(force: pygame.Vector2):
         offset = -force
     lastOffset = offset
     velocity += (-springConstant*offset - damping*velocity)
-    print(velocity)
     offset += velocity * deltaTime
-
-
 
 # Clearing Lines
 def clearLine(y: int):
@@ -532,18 +515,6 @@ while replay:
                 closed = True
                 replay = False
             if event.type == pygame.KEYDOWN:
-                if event.key in controls['scale 1']:
-                    setScale(1)
-                elif event.key in controls['scale 2']:
-                    setScale(2)
-                elif event.key in controls['scale 3']:
-                    setScale(3)
-                elif event.key in controls['scale 4']:
-                    setScale(4)
-                if event.key in controls['toggle fps']:
-                    show_fps = not show_fps
-                    demeter += 50
-
                 if event.key in controls['dementia']:
                     if not AREpaused:
                         dementia = not dementia
@@ -558,6 +529,7 @@ while replay:
                     replay = False
                 if event.key in controls['toggle ghost']:
                     show_ghost = not show_ghost
+                    demeter = 80
                 if (not paused) and (not AREpaused) and event.key in controls['left rotate']:
                     currentShape.rotate(-1)
                     i = True
@@ -684,7 +656,7 @@ while replay:
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
                 currentShape.y += 1
                 getCollision()
-                shakeScreen(pygame.Vector2(0,-10))
+                shakeScreen(pygame.Vector2(0,-1000))
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
@@ -733,18 +705,7 @@ while replay:
         writeNums((59-11,72),lines,3)
         writeNums((204,72),lvl,2)
 
-        if show_fps:
-            pygame.draw.rect(screen,(0,0,0),pygame.Rect(0,0,19,9))
-            if int(clock.get_fps()) < 20:
-                writeNums((2,0),int(clock.get_fps()),2,(255,0,0))
-            elif int(clock.get_fps()) < 30:
-                writeNums((2,0),int(clock.get_fps()),2,(255,128,0))
-            elif int(clock.get_fps()) < 40:
-                writeNums((2,0),int(clock.get_fps()),2,(255,255,0))
-            else:
-                writeNums((2,0),int(clock.get_fps()),2,(255,255,255))
-
-        pygame.draw.rect(screen,"#78e08f", pygame.Rect(96, 211, demeter, 9))
+        pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
 
         if paused and running:
             screen.blit(paused_overlay,(0,0))
