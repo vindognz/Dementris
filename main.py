@@ -522,6 +522,8 @@ while replay:
                             dementia = True
                             demeter = 0
 
+                if event.key in controls['pause']:
+                    paused = not paused
                 if event.key in controls['reset']:
                     reset = True
                 if event.key in controls['quit']:
