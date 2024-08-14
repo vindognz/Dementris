@@ -91,7 +91,7 @@ demeter = 0
 offset = pygame.Vector2(0,0)
 lastOffset = pygame.Vector2(0,0)
 deltaTime = 0
-springConstant = 0.1
+springConstant = 0.01
 damping = 1
 
 lines = 0
@@ -656,7 +656,7 @@ while replay:
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
                 currentShape.y += 1
                 getCollision()
-                shakeScreen(pygame.Vector2(0,-1000))
+                shakeScreen(pygame.Vector2(0,-10))
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
