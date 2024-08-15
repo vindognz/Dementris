@@ -367,7 +367,7 @@ def shakeScreen(force: pygame.Vector2):
 
 # Clearing Lines
 def clearLine(y: int):
-    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed
+    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed,demeter
     linesCleared += 1
     AREpaused = True
     AREpauseLength = TotalAREpauseLength
@@ -384,6 +384,12 @@ def clearLine(y: int):
             flash_stamps.append((pos,piece))
     stamps = temp
     lines += 1
+
+    demeter += 2
+    
+    if demeter > 80:
+        demeter = 80
+
     if lines % 10 == 0:
         lvl += 1
         if doParticles:

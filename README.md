@@ -2,7 +2,7 @@
 ~~we made tetris in pygame. pain insued.~~\
 ~~we're making tetris in pygame. pain is ***eternal***~~\
 ~~we made tetris in pygame. pain insued.~~\
-i make dementia in pytetris in pygame. i forgor if pain
+i make dementia in pytetris in pygame. i forgor how pain
 
 ## Default Controls
 **Left Rotate:** z\
