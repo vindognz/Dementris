@@ -1,6 +1,6 @@
 # ~ Imports ~ #
 import pygame
-from random import shuffle, randint
+from random import shuffle, randint, randrange
 from os import environ as osEnviron
 from os import path as osPath
 from copy import deepcopy
@@ -23,6 +23,7 @@ pygame.display.set_icon(icon)
 screen = pygame.image.load('images/gui/bg.png').convert()
 paused_overlay = pygame.image.load('images/gui/paused.png').convert_alpha()
 death_overlay = pygame.image.load('images/gui/gameOver.png').convert_alpha()
+lvl_up_particle = pygame.image.load('images/gui/lvlUpParticle.png').convert_alpha()
 
 pieces = [
     pygame.image.load('images/pieces/0.png').convert_alpha(),
@@ -30,6 +31,21 @@ pieces = [
     pygame.image.load('images/pieces/2.png').convert_alpha(),
     pygame.image.load('images/pieces/ghost.png').convert_alpha()
 ]
+
+def getGraphValues(image_path):
+    img = pygame.image.load('images/curves/'+image_path)
+    img = img.convert()
+    width, height = img.get_size()
+    pixel_counts = []
+    for x in range(width):
+        pixel_counts.append(0)
+        for y in range(height):
+            color = img.get_at((x,y))
+            if color != (255,255,255,255):
+                pixel_counts[x] += 1
+    return pixel_counts
+
+spreadParticleSizeCurve = getGraphValues('spreadParticleSize.png')
 
 # - Load controls - #
 controls = {
@@ -98,7 +114,8 @@ lines = 0
 lvl = 0
 speed = 48
 
-
+doParticles = True
+spreadParticles = []
 
 # Map storage
 tileMap = []
@@ -164,7 +181,37 @@ def writeNums(pos: tuple, num: int, length: int,color=(255,255,255)):
         screen.blit(text, (pos[0]+8*i,pos[1]))
         i += 1
 
-
+class SpreadParticles:
+    class Particle:
+        def __init__(self,x,y,xv,yv,gs,img,c=(255,255,255)) -> None:
+            self.x = x
+            self.y = y
+            self.x_vel = xv
+            self.y_vel = yv
+            self.gravity_scale = gs * randrange(1,2)
+            self.img = img
+            self.color = c
+            self.age = 0
+            self.gravity = randrange(2,7)
+        def draw(self,surface: pygame.Surface):
+            self.age += 1
+            self.gravity -= self.gravity_scale
+            self.x += self.x_vel
+            self.y += self.y_vel * self.gravity
+            colored = self.img.copy()
+            colored.fill(self.color,special_flags=pygame.BLEND_RGB_MULT)
+            sized = pygame.transform.scale(colored, ((spreadParticleSizeCurve[self.age]*0.01)*self.img.get_width(),(spreadParticleSizeCurve[self.age]*0.01)*self.img.get_height()))
+            surface.blit(sized,(self.x-(sized.get_width()//2),self.y-(sized.get_height()//2))) 
+    def __init__(self,amount,start_x,start_y,gravity_scale,img,color=(255,255,255)) -> None:
+        self.particles = []
+        for i in range(amount):
+            self.particles.append(self.Particle(start_x,start_y,randrange(-4,4),randrange(-2,0),gravity_scale,img,color))
+    def draw(self,surface):
+        for particle in self.particles:
+            if particle.age >= 89:
+                self.particles.pop(self.particles.index(particle))
+            else:
+                particle.draw(surface)
 
 # Shapes and pieces
 all_shapes = {}
@@ -320,7 +367,7 @@ def shakeScreen(force: pygame.Vector2):
 
 # Clearing Lines
 def clearLine(y: int):
-    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed,demeter
+    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed
     linesCleared += 1
     AREpaused = True
     AREpauseLength = TotalAREpauseLength
@@ -337,20 +384,19 @@ def clearLine(y: int):
             flash_stamps.append((pos,piece))
     stamps = temp
     lines += 1
-    demeter += 2
-    if demeter > 80:
-        demeter = demeter #80
     if lines % 10 == 0:
         lvl += 1
-        # if lvl < 9:
-        #     speed -= 5
-        # elif lvl == 9:
-        #     speed -= 2
-        # elif lvl in [10,13,16,19,29]:
-        #     speed -= 1
-        # if lvl > 99:
-        #     lvl = 99
-        #     speed = 48
+        if doParticles:
+            spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
+        if lvl < 9:
+            speed -= 5
+        elif lvl == 9:
+            speed -= 2
+        elif lvl in [10,13,16,19,29]:
+            speed -= 1
+        if lvl > 99:
+            lvl = 99
+            speed = 48
     if lines > 999:
         lines = 999
 
@@ -482,6 +528,8 @@ while replay:
     lastOffset = pygame.Vector2(0,0)
     deltaTime = 0
 
+    spreadParticles = []
+
     lines = 0
     lvl = 0
     speed = 48
@@ -531,7 +579,7 @@ while replay:
                     replay = False
                 if event.key in controls['toggle ghost']:
                     show_ghost = not show_ghost
-                    demeter = 80
+                    demeter += 100
                 if (not paused) and (not AREpaused) and event.key in controls['left rotate']:
                     currentShape.rotate(-1)
                     i = True
@@ -706,6 +754,14 @@ while replay:
         screen.blit(layer3,(0,0))
         writeNums((59-11,72),lines,3)
         writeNums((204,72),lvl,2)
+
+        if doParticles:
+            for _spreadParticles in spreadParticles:
+                if len(_spreadParticles.particles) == 0:
+                    spreadParticles.remove(_spreadParticles)
+                else:
+                    if (not paused) and running:
+                        _spreadParticles.draw(screen)
 
         pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
 
