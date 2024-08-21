@@ -23,6 +23,7 @@ pygame.display.set_icon(icon)
 screen = pygame.image.load('images/gui/bg.png').convert()
 paused_overlay = pygame.image.load('images/gui/paused.png').convert_alpha()
 death_overlay = pygame.image.load('images/gui/gameOver.png').convert_alpha()
+pivot_sprite = pygame.image.load(f'images/pieces/pivot.png').convert_alpha()
 lvl_up_particle = pygame.image.load('images/gui/lvlUpParticle.png').convert_alpha()
 
 pieces = [
@@ -46,6 +47,7 @@ def getGraphValues(image_path):
     return pixel_counts
 
 spreadParticleSizeCurve = getGraphValues('spreadParticleSize.png')
+moveShapeAnimCurve = getGraphValues('moveShapeAnim.png')
 
 # - Load controls - #
 controls = {
@@ -55,6 +57,7 @@ controls = {
     'move right': [pygame.K_RIGHT],
     'soft down': [pygame.K_DOWN],
     'hard down': [pygame.K_SPACE],
+    'toggle pivot indicator': [pygame.K_d],
     'hold': [pygame.K_c],
     'pause': [pygame.K_RETURN],
     'reset': [pygame.K_r],
@@ -104,11 +107,22 @@ AREpauseLength = 0
 linesCleared = 0
 demeter = 0
 
+showPivot = True
+
+holdAnimFrames = -1
+holdAnim_mode = 'current to hold'
+# possible modes: 'current to hold', 'swap'
+holdAnim_oldCurrentPos = (0,0)
+holdAnim_newCurrentPos = (0,0)
+holdAnim_oldCurrentRot = 0
+
+nextAnimFrames = -1
+
 offset = pygame.Vector2(0,0)
 lastOffset = pygame.Vector2(0,0)
 deltaTime = 0
-springConstant = 0.01
-damping = 1
+springConstant = 1
+damping = 0.05
 
 lines = 0
 lvl = 0
@@ -313,6 +327,10 @@ class Shapes:
                 self.y += (oldCenterPieceLocalY - centerPiece.localy)
             
         def draw(self):
+            if showPivot and self.getCenterPiece():
+                self.getCenterPiece().sprite.image.blit(pivot_sprite,(0,0),special_flags=pygame.BLEND_RGBA_MIN)
+            elif self.getCenterPiece():
+                self.getCenterPiece().sprite.image = pygame.image.load(f'images/pieces/{self.piece_sprite}.png').convert_alpha()
             for piece in self.pieces:
                 piece.sprite.rect.x = 96+(8*(self.x+piece.localx))
                 piece.sprite.rect.y = 40+(8*(self.y+piece.localy))
@@ -360,10 +378,12 @@ def shakeScreen(force: pygame.Vector2):
         velocity = (lastOffset - offset) * deltaTime
     else:
         velocity = force * deltaTime
-        offset = -force
+        # offset = -force * springConstant
+    
+    velocity = (-springConstant*offset/1000 - damping*velocity) * deltaTime
     lastOffset = offset
-    velocity += (-springConstant*offset - damping*velocity)
     offset += velocity * deltaTime
+    print(f"Offset: {offset}, Last Offset: {lastOffset}, Velocity: {velocity}")
 
 # Clearing Lines
 def clearLine(y: int):
@@ -388,21 +408,21 @@ def clearLine(y: int):
     demeter += 2
     
     if demeter > 80:
-        demeter = 80
+        demeter = demeter#80
 
-    if lines % 10 == 0:
+    if lines % 1 == 0:
         lvl += 1
         if doParticles:
             spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
-        if lvl < 9:
-            speed -= 5
-        elif lvl == 9:
-            speed -= 2
-        elif lvl in [10,13,16,19,29]:
-            speed -= 1
-        if lvl > 99:
-            lvl = 99
-            speed = 48
+        # if lvl < 9:
+        #     speed -= 5
+        # elif lvl == 9:
+        #     speed -= 2
+        # elif lvl in [10,13,16,19,29]:
+        #     speed -= 1
+        # if lvl > 99:
+        #     lvl = 99
+        #     speed = 48
     if lines > 999:
         lines = 999
 
@@ -536,6 +556,15 @@ while replay:
 
     spreadParticles = []
 
+    holdAnimFrames = -1
+    holdAnim_mode = 'current to hold'
+    # possible modes: 'current to hold', 'swap'
+    holdAnim_oldCurrentPos = (0,0)
+    holdAnim_newCurrentPos = (0,0)
+    holdAnim_oldCurrentRot = 0
+
+    nextAnimFrames = -1
+
     lines = 0
     lvl = 0
     speed = 48
@@ -576,6 +605,8 @@ while replay:
                             dementia = True
                             demeter = 0
 
+                if event.key in controls['toggle pivot indicator']:
+                    showPivot = not showPivot
                 if event.key in controls['pause']:
                     paused = not paused
                 if event.key in controls['reset']:
@@ -586,7 +617,7 @@ while replay:
                 if event.key in controls['toggle ghost']:
                     show_ghost = not show_ghost
                     demeter += 100
-                if (not paused) and (not AREpaused) and event.key in controls['left rotate']:
+                if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['left rotate'] and currentShape.getCenterPiece():
                     currentShape.rotate(-1)
                     i = True
                     out = False
@@ -620,7 +651,7 @@ while replay:
                     else:
                         currentShape.rotate(1)
                         getCollision()
-                if (not paused) and (not AREpaused) and event.key in controls['right rotate']:
+                if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['right rotate'] and currentShape.getCenterPiece():
                     currentShape.rotate(1)
                     i = True
                     out = False
@@ -654,8 +685,11 @@ while replay:
                     else:
                         currentShape.rotate(-1)
                         getCollision()
-                if (not paused) and (not AREpaused) and event.key in controls['hold'] and holdCount == 0:
+                if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['hold'] and holdCount == 0:
                     if holdShape == None:
+                        holdAnim_mode = 'current to hold'
+                        holdAnim_oldCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
+                        holdAnim_oldCurrentRot = currentShape.rotation
                         currentShape.x = 4
                         currentShape.y = 0
                         currentShape.rotation = 1
@@ -668,9 +702,14 @@ while replay:
                         currentShape = nextShape
                         ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
                         nextShape = Shapes.fromBag()
+                        nextAnimFrames = len(moveShapeAnimCurve)
                     else:
+                        holdAnim_mode = 'swap'
+                        holdAnim_oldCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
+                        holdAnim_oldCurrentRot = currentShape.rotation
                         currentShape.x = 4
                         currentShape.y = 0
+                        holdAnim_newCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
                         currentShape.rotation = 1
                         currentShape.rotate(-1)
                         holdShape.x = 4
@@ -684,7 +723,8 @@ while replay:
                         ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
                     holdCount += 1
                     getCollision()
-        if (not paused) and (not AREpaused):
+                    holdAnimFrames = len(moveShapeAnimCurve)
+        if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0):
             # Input
             if (not getInp('move left')) and (not getInp('move right')):
                 holding_input = False
@@ -712,13 +752,13 @@ while replay:
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
                 currentShape.y += 1
                 getCollision()
-                shakeScreen(pygame.Vector2(0,-10))
+                shakeScreen(pygame.Vector2(0,-0.05))
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
                 currentShape.y = ghostShape.y
-                shakeScreen(pygame.Vector2(0,-50))
+                shakeScreen(pygame.Vector2(0,-0.5))
                 getCollision()
 
         # Rendering
@@ -746,14 +786,19 @@ while replay:
             if c != '':
                 running = False
                 break
-        if running:
-            screen.blit(nextShape.gui_sprite,(191,95))
-
+        if nextAnimFrames < 0:
+            screen.blit(nextShape.gui_sprite,(191+2,95+10))
+        else:
+            nextShapeGui_scaled = pygame.transform.scale(nextShape.gui_sprite.copy(),pygame.Vector2(33,42)*(0.01*moveShapeAnimCurve[nextAnimFrames-1]))
+            screen.blit(nextShapeGui_scaled,pygame.Vector2(193+15.5,105+21)-(pygame.Vector2(nextShapeGui_scaled.get_size())/2))
+        if holdAnimFrames < 0:
             if holdShape != None:
-                screen.blit(holdShape.gui_sprite,(80-holdShape.gui_sprite.get_width(),95))
-            if show_ghost:
-                ghostShape.draw()
-            currentShape.draw()
+                screen.blit(holdShape.gui_sprite,(191+2,151+10))
+            if nextAnimFrames < 0:
+                if show_ghost:
+                    ghostShape.draw()
+                currentShape.draw()
+
         layer3 = pygame.surface.Surface((256,224), pygame.SRCALPHA)
         layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
         screen.blit(layer1,(0,0))
@@ -768,6 +813,38 @@ while replay:
                 else:
                     if (not paused) and running:
                         _spreadParticles.draw(screen)
+
+        if not paused and holdAnimFrames >= 0:
+            if holdAnimFrames > 0:
+                if holdAnim_mode == 'current to hold':
+                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(193,161)
+                    rotDiff = 0
+                    if holdAnim_oldCurrentRot >= 2:
+                        rotDiff = (90*holdAnim_oldCurrentRot)
+                    else:
+                        rotDiff = (-90*holdAnim_oldCurrentRot)
+                    rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
+                    screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+                elif holdAnim_mode == 'swap':
+                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(193,161)
+                    rotDiff = 0
+                    if holdAnim_oldCurrentRot >= 2:
+                        rotDiff = (90*holdAnim_oldCurrentRot)
+                    else:
+                        rotDiff = (-90*holdAnim_oldCurrentRot)
+                    rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
+                    screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+                    diff = pygame.Vector2(193,161) - pygame.Vector2(holdAnim_newCurrentPos)
+                    screen.blit(currentShape.gui_sprite,pygame.Vector2(193,161) - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+            holdAnimFrames -= 1
+        if not paused and nextAnimFrames >= 0:
+            if nextAnimFrames > 0:
+                diff = pygame.Vector2(193,105) - (130,50)
+                screen.blit(currentShape.gui_sprite.copy(),(193,105) - ((moveShapeAnimCurve[nextAnimFrames-1]*0.01)*diff))
+            else:
+                timers['fall'].duration = speed
+                timers['fall'].activate()
+            nextAnimFrames -= 1
 
         pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
 
@@ -815,10 +892,11 @@ while replay:
                 currentShape = nextShape
                 ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
                 nextShape = Shapes.fromBag()
+                nextAnimFrames = len(moveShapeAnimCurve)
                 holdCount = 0
                 if getInp('soft down') or getInp('hard down'):
                     holding_down = True
-            elif timers['fall'].finished and not ((not holding_down) and (getInp('soft down') or getInp('hard down'))):
+            elif timers['fall'].finished and (holdAnimFrames < 0 and nextAnimFrames < 0) and not ((not holding_down) and (getInp('soft down') or getInp('hard down'))):
                 currentShape.y += 1
                 timers['fall'].duration = speed
                 timers['fall'].activate()
