@@ -121,8 +121,9 @@ nextAnimFrames = -1
 offset = pygame.Vector2(0,0)
 lastOffset = pygame.Vector2(0,0)
 deltaTime = 0
-springConstant = 1
-damping = 0.05
+springConstant = 800
+damping = 10
+velocity = pygame.Vector2(0,0)
 
 lines = 0
 lvl = 0
@@ -373,17 +374,17 @@ def getInp(control_scheme):
     return False
 
 def shakeScreen(force: pygame.Vector2):
-    global offset,lastOffset,deltaTime,springConstant,damping
+    global offset,lastOffset,deltaTime,springConstant,damping,velocity
     if force.magnitude() == 0:
-        velocity = (lastOffset - offset) * deltaTime
+        velocity += (-springConstant*offset - damping * velocity) * deltaTime
     else:
         velocity = force * deltaTime
-        # offset = -force * springConstant
-    
-    velocity = (-springConstant*offset/1000 - damping*velocity) * deltaTime
-    lastOffset = offset
+
+    if velocity.magnitude() < 0.01:
+        velocity = pygame.Vector2(0,0)
+        offset = pygame.Vector2(0,0)
+
     offset += velocity * deltaTime
-    print(f"Offset: {offset}, Last Offset: {lastOffset}, Velocity: {velocity}")
 
 # Clearing Lines
 def clearLine(y: int):
@@ -414,15 +415,15 @@ def clearLine(y: int):
         lvl += 1
         if doParticles:
             spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
-        # if lvl < 9:
-        #     speed -= 5
-        # elif lvl == 9:
-        #     speed -= 2
-        # elif lvl in [10,13,16,19,29]:
-        #     speed -= 1
-        # if lvl > 99:
-        #     lvl = 99
-        #     speed = 48
+        if lvl < 9:
+            speed -= 5
+        elif lvl == 9:
+            speed -= 2
+        elif lvl in [10,13,16,19,29]:
+            speed -= 1
+        if lvl > 99:
+            lvl = 99
+            speed = 48
     if lines > 999:
         lines = 999
 
@@ -588,7 +589,7 @@ while replay:
     timers['soft down'].deactivate()
     timers['demeter'].deactivate()
     while running and (not reset):  
-        deltaTime = clock.tick(frameRate)
+        deltaTime = clock.tick(frameRate) / 1000
         if not paused:
             for timer in timers.values():
                 timer.update()
@@ -752,13 +753,13 @@ while replay:
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
                 currentShape.y += 1
                 getCollision()
-                shakeScreen(pygame.Vector2(0,-0.05))
+                shakeScreen(pygame.Vector2(0,3))
                 timers['soft down'].duration = 2
                 timers['soft down'].activate()
                 timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
                 currentShape.y = ghostShape.y
-                shakeScreen(pygame.Vector2(0,-0.5))
+                shakeScreen(pygame.Vector2(0,100))
                 getCollision()
 
         # Rendering
@@ -793,7 +794,7 @@ while replay:
             screen.blit(nextShapeGui_scaled,pygame.Vector2(193+15.5,105+21)-(pygame.Vector2(nextShapeGui_scaled.get_size())/2))
         if holdAnimFrames < 0:
             if holdShape != None:
-                screen.blit(holdShape.gui_sprite,(191+2,151+10))
+                screen.blit(holdShape.gui_sprite,(66-holdShape.gui_sprite.get_width()+2,95+10))
             if nextAnimFrames < 0:
                 if show_ghost:
                     ghostShape.draw()
@@ -856,7 +857,7 @@ while replay:
         scaled = pygame.transform.scale(screen, display.get_size())
         shakeScreen(pygame.Vector2(0,0))
         display.fill('black')
-        display.blit(scaled, (-8*(display.get_width()//screen.get_width())+offset[0], offset[1]-50))
+        display.blit(scaled, (-8*(display.get_width()//screen.get_width())+offset[0]*100, offset[1]*100-50))
         pygame.display.flip()
 
         if (not paused) and (not AREpaused):
