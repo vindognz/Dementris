@@ -168,7 +168,7 @@ stamps = []
 def drawStamps():
     for i in range(len(stamps)):
         if not dementia or i < demeter/10+10:
-            stamps[i][1].image.set_alpha(round(max(0,(demeter/10+10)-i)*24))
+            stamps[i][1].image.set_alpha(round(max(0,(demeter/10+10)-i)*32))
             screen.blit(stamps[i][1].image, stamps[i][0])
         if not dementia:
             stamps[i][1].image.set_alpha(255)
@@ -414,14 +414,14 @@ def clearLine(y: int):
     if demeter > 80:
         demeter = demeter
 
-    if lines % 1 == 0:
+    if lines % 10 == 0:
         lvl += 1
         if doParticles:
             spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
         if lvl < 9:
             speed -= 3
         elif lvl == 9:
-            speed -= 1
+            speed -= 2
         elif lvl in [10,13,16,19,29]:
             speed -= 1
         if lvl > 99:
