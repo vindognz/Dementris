@@ -1,11 +1,11 @@
 # ~ Imports ~ #
 import pygame
-from random import shuffle, randint, randrange
-from os import environ as osEnviron
+from random import shuffle, randrange
 from os import path as osPath
 from copy import deepcopy
 from json import load as jsonLoad
 from json import dump as jsonDump
+from subprocess import run as subprocessRun
 
 # Inits
 pygame.init()
@@ -400,8 +400,9 @@ def clearLine(y: int):
     tileMap.insert(0,empty)
     temp = []
     for pos,piece in stamps:
+        if piece.globaly <= y:
+            thud += 2
         if piece.globaly != y:
-            thud += 1
             temp.append((pos,piece))
         else:
             flash_stamps.append((pos,piece))
@@ -614,7 +615,8 @@ while replay:
                 if event.key in controls['pause']:
                     paused = not paused
                 if event.key in controls['reset']:
-                    reset = True
+                    subprocessRun(["python",osPath.abspath(__file__)])
+                    exit()
                 if event.key in controls['quit']:
                     closed = True
                     replay = False
@@ -798,7 +800,7 @@ while replay:
             screen.blit(nextShapeGui_scaled,pygame.Vector2(193+15.5,105+21)-(pygame.Vector2(nextShapeGui_scaled.get_size())/2))
         if holdAnimFrames < 0:
             if holdShape != None:
-                screen.blit(holdShape.gui_sprite,(66-holdShape.gui_sprite.get_width()+2,95+10))
+                screen.blit(holdShape.gui_sprite,(80-holdShape.gui_sprite.get_width(),95))
             if nextAnimFrames < 0:
                 if show_ghost:
                     ghostShape.draw()
@@ -822,7 +824,7 @@ while replay:
         if not paused and holdAnimFrames >= 0:
             if holdAnimFrames > 0:
                 if holdAnim_mode == 'current to hold':
-                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(193,161)
+                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(),95)
                     rotDiff = 0
                     if holdAnim_oldCurrentRot >= 2:
                         rotDiff = (90*holdAnim_oldCurrentRot)
@@ -831,7 +833,7 @@ while replay:
                     rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
                     screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
                 elif holdAnim_mode == 'swap':
-                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(193,161)
+                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(),95)
                     rotDiff = 0
                     if holdAnim_oldCurrentRot >= 2:
                         rotDiff = (90*holdAnim_oldCurrentRot)
@@ -839,8 +841,8 @@ while replay:
                         rotDiff = (-90*holdAnim_oldCurrentRot)
                     rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
                     screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
-                    diff = pygame.Vector2(193,161) - pygame.Vector2(holdAnim_newCurrentPos)
-                    screen.blit(currentShape.gui_sprite,pygame.Vector2(193,161) - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+                    diff = pygame.Vector2(80-holdShape.gui_sprite.get_width(),95) - pygame.Vector2(holdAnim_newCurrentPos)
+                    screen.blit(currentShape.gui_sprite,pygame.Vector2(80-holdShape.gui_sprite.get_width(),95) - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
             holdAnimFrames -= 1
         if not paused and nextAnimFrames >= 0:
             if nextAnimFrames > 0:
@@ -888,7 +890,6 @@ while replay:
                     cleared_count += 1
                     shakeScreen(pygame.Vector2(0,thud*10))
                 i += 1
-
 
 
             if collided and (timers['fall'].finished or getInp('hard down')):
