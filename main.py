@@ -121,7 +121,7 @@ nextAnimFrames = -1
 offset = pygame.Vector2(0,0)
 lastOffset = pygame.Vector2(0,0)
 deltaTime = 0
-springConstant = 800
+springConstant = 500
 damping = 10
 velocity = pygame.Vector2(0,0)
 
@@ -388,7 +388,8 @@ def shakeScreen(force: pygame.Vector2):
 
 # Clearing Lines
 def clearLine(y: int):
-    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed,demeter
+    global linesCleared,AREpaused,AREpauseLength,stamps,lines,lvl,speed,demeter,thud
+    thud = 0
     linesCleared += 1
     AREpaused = True
     AREpauseLength = TotalAREpauseLength
@@ -400,6 +401,7 @@ def clearLine(y: int):
     temp = []
     for pos,piece in stamps:
         if piece.globaly != y:
+            thud += 1
             temp.append((pos,piece))
         else:
             flash_stamps.append((pos,piece))
@@ -409,16 +411,16 @@ def clearLine(y: int):
     demeter += 2
     
     if demeter > 80:
-        demeter = demeter#80
+        demeter = demeter
 
     if lines % 1 == 0:
         lvl += 1
         if doParticles:
             spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
         if lvl < 9:
-            speed -= 5
+            speed -= 3
         elif lvl == 9:
-            speed -= 2
+            speed -= 1
         elif lvl in [10,13,16,19,29]:
             speed -= 1
         if lvl > 99:
@@ -554,6 +556,7 @@ while replay:
     offset = pygame.Vector2(0,0)
     lastOffset = pygame.Vector2(0,0)
     deltaTime = 0
+    thud = 0
 
     spreadParticles = []
 
@@ -750,13 +753,14 @@ while replay:
                 holding_input = True
             if holding_down and not (getInp('soft down') or getInp('hard down')):
                 holding_down = False
-            if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided and (timers['soft down'].finished or speed == 1):
-                currentShape.y += 1
-                getCollision()
-                shakeScreen(pygame.Vector2(0,3))
-                timers['soft down'].duration = 2
-                timers['soft down'].activate()
-                timers['fall'].activate()
+            if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided:
+                shakeScreen(pygame.Vector2(0,50))
+                if (timers['soft down'].finished or speed == 1):
+                    currentShape.y += 1
+                    getCollision()
+                    timers['soft down'].duration = 2
+                    timers['soft down'].activate()
+                    timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
                 currentShape.y = ghostShape.y
                 shakeScreen(pygame.Vector2(0,100))
@@ -882,7 +886,10 @@ while replay:
                 if cleared:
                     clearLine(i)
                     cleared_count += 1
+                    shakeScreen(pygame.Vector2(0,thud*10))
                 i += 1
+
+
 
             if collided and (timers['fall'].finished or getInp('hard down')):
                 currentShape.stamp()
