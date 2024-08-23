@@ -1,11 +1,12 @@
 # ~ Imports ~ #
 import pygame
 from random import shuffle, randrange
-from os import path as osPath
+from os import path as osPath, execv
 from copy import deepcopy
 from json import load as jsonLoad
 from json import dump as jsonDump
 from subprocess import run as subprocessRun
+import sys
 
 # Inits
 pygame.init()
@@ -615,8 +616,7 @@ while replay:
                 if event.key in controls['pause']:
                     paused = not paused
                 if event.key in controls['reset']:
-                    subprocessRun(["python",osPath.abspath(__file__)])
-                    exit()
+                    execv(sys.executable, ['python'] + sys.argv)
                 if event.key in controls['quit']:
                     closed = True
                     replay = False
