@@ -446,7 +446,7 @@ def clearLine(y: int):
     stamps = temp
     lines += 1
 
-    demeter += 2
+    demeter += 10
     
     if demeter > 80:
         demeter = 80
@@ -642,17 +642,37 @@ while replay:
             if event.type == pygame.KEYDOWN:
                 if event.key in controls['dementia']:
                     if not AREpaused:
+                        # nuke
                         if demeter >= 80:
                             demeter = 0
                             y = 0
+                            tilesCleared = 0
                             for row in tileMap:
                                 x = 0
                                 for tile in row:
                                     if tileMap[y][x] != '':
+                                        tilesCleared += 1
                                         dustParticles.append(DustParticles(8,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
                                         tileMap[y][x] = ''
                                     x += 1
                                 y += 1
+                                for i in range(tilesCleared // 10):
+                                    lines += 1
+                                    if lines % 10 == 0:
+                                        lvl += 1
+                                        if doParticles:
+                                            spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
+                                        if lvl < 9:
+                                            speed -= 3
+                                        elif lvl == 9:
+                                            speed -= 2
+                                        elif lvl in [10,13,16,19,29]:
+                                            speed -= 1
+                                        if lvl > 99:
+                                            lvl = 99
+                                            speed = 48
+                                    if lines > 999:
+                                        lines = 999
                         dementia = not dementia
                         if (not dementia) and demeter <= 0:
                             dementia = True
@@ -669,7 +689,7 @@ while replay:
                     replay = False
                 if event.key in controls['toggle ghost']:
                     show_ghost = not show_ghost
-                    demeter = 80
+                    demeter = 70
                 if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['left rotate'] and currentShape.getCenterPiece():
                     currentShape.rotate(-1)
                     kicked = False
@@ -915,7 +935,11 @@ while replay:
                 timers['fall'].activate()
             nextAnimFrames -= 1
 
-        pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
+
+        if demeter == 80:
+            pygame.draw.rect(screen,"#00ff00", pygame.Rect(96, 211, demeter, 9))
+        else:
+            pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
 
         if paused and running:
             screen.blit(paused_overlay,(0,0))
