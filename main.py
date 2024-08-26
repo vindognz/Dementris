@@ -48,6 +48,7 @@ def getGraphValues(image_path):
     return pixel_counts
 
 spreadParticleSizeCurve = getGraphValues('spreadParticleSize.png')
+dustParticleSizeCurve = getGraphValues('dustParticleSize.png')
 moveShapeAnimCurve = getGraphValues('moveShapeAnim.png')
 thudForceCurve = getGraphValues('thudForce.png')
 
@@ -132,6 +133,7 @@ speed = 48
 
 doParticles = True
 spreadParticles = []
+dustParticles = []
 
 # Map storage
 tileMap = []
@@ -224,7 +226,41 @@ class SpreadParticles:
             self.particles.append(self.Particle(start_x,start_y,randrange(-4,4),randrange(-2,0),gravity_scale,img,color))
     def draw(self,surface):
         for particle in self.particles:
-            if particle.age >= 89:
+            if particle.age >= len(spreadParticleSizeCurve)-1:
+                self.particles.pop(self.particles.index(particle))
+            else:
+                particle.draw(surface)
+class DustParticles:
+    class Particle:
+        def __init__(self,x,y,xv,yv,img,c=(255,255,255)) -> None:
+            self.x = x
+            self.y = y
+            self.x_vel = xv
+            self.y_vel = yv
+            self.img = img
+            self.color = c
+            self.age = 0
+        def draw(self,surface: pygame.Surface):
+            self.age += 1
+            self.x += self.x_vel
+            self.y += self.y_vel
+            colored = self.img.copy()
+            colored.fill(self.color,special_flags=pygame.BLEND_RGB_MULT)
+            sized = pygame.transform.scale(colored, ((dustParticleSizeCurve[self.age]*0.01)*self.img.get_width(),(dustParticleSizeCurve[self.age]*0.01)*self.img.get_height()))
+            surface.blit(sized,(self.x-(sized.get_width()//2),self.y-(sized.get_height()//2))) 
+    def __init__(self,amount,start_x,start_y,img,color=(255,255,255)) -> None:
+        self.particles = []
+        for i in range(amount):
+            xv = 0
+            while xv == 0:
+                xv = randrange(-4,4)
+            yv = 0
+            while yv == 0:
+                yv = randrange(-4,4)
+            self.particles.append(self.Particle(start_x,start_y,xv,yv,img,color))
+    def draw(self,surface):
+        for particle in self.particles:
+            if particle.age >= len(spreadParticleSizeCurve)-1:
                 self.particles.pop(self.particles.index(particle))
             else:
                 particle.draw(surface)
@@ -413,7 +449,7 @@ def clearLine(y: int):
     demeter += 2
     
     if demeter > 80:
-        demeter = demeter
+        demeter = 80
 
     if lines % 10 == 0:
         lvl += 1
@@ -560,6 +596,7 @@ while replay:
     thud = 0
 
     spreadParticles = []
+    dustParticles = []
 
     holdAnimFrames = -1
     holdAnim_mode = 'current to hold'
@@ -605,6 +642,17 @@ while replay:
             if event.type == pygame.KEYDOWN:
                 if event.key in controls['dementia']:
                     if not AREpaused:
+                        if demeter >= 80:
+                            demeter = 0
+                            y = 0
+                            for row in tileMap:
+                                x = 0
+                                for tile in row:
+                                    if tileMap[y][x] != '':
+                                        dustParticles.append(DustParticles(100,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
+                                        tileMap[y][x] = ''
+                                    x += 1
+                                y += 1
                         dementia = not dementia
                         if (not dementia) and demeter <= 0:
                             dementia = True
@@ -621,9 +669,10 @@ while replay:
                     replay = False
                 if event.key in controls['toggle ghost']:
                     show_ghost = not show_ghost
-                    demeter += 100
+                    demeter = 80
                 if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['left rotate'] and currentShape.getCenterPiece():
                     currentShape.rotate(-1)
+                    kicked = False
                     i = True
                     out = False
                     for piece in currentShape.pieces:
@@ -644,6 +693,7 @@ while replay:
                                 ii = True
                                 break
                         if ii:
+                            kicked = True
                             i = True
                             for piece in currentShape.pieces:
                                 if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
@@ -653,12 +703,15 @@ while replay:
                                 currentShape.x = oldX
                     if i:
                         getCollision()
+                        if kicked:
+                            shakeScreen(pygame.Vector2(100,0))
                     else:
                         currentShape.rotate(1)
                         getCollision()
                 if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['right rotate'] and currentShape.getCenterPiece():
                     currentShape.rotate(1)
                     i = True
+                    kicked = False
                     out = False
                     for piece in currentShape.pieces:
                         if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
@@ -678,6 +731,7 @@ while replay:
                                 ii = True
                                 break
                         if ii:
+                            kicked = True
                             i = True
                             for piece in currentShape.pieces:
                                 if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
@@ -687,6 +741,8 @@ while replay:
                                 currentShape.x = oldX
                     if i:
                         getCollision()
+                        if kicked:
+                            shakeScreen(pygame.Vector2(100,0))
                     else:
                         currentShape.rotate(-1)
                         getCollision()
@@ -819,6 +875,13 @@ while replay:
                 else:
                     if (not paused) and running:
                         _spreadParticles.draw(screen)
+        if doParticles:
+            for _dustParticles in dustParticles:
+                if len(_dustParticles.particles) == 0:
+                    dustParticles.remove(_dustParticles)
+                else:
+                    if (not paused) and running:
+                        _dustParticles.draw(screen)
 
         if not paused and holdAnimFrames >= 0:
             if holdAnimFrames > 0:
