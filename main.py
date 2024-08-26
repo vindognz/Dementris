@@ -649,7 +649,7 @@ while replay:
                                 x = 0
                                 for tile in row:
                                     if tileMap[y][x] != '':
-                                        dustParticles.append(DustParticles(100,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
+                                        dustParticles.append(DustParticles(8,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
                                         tileMap[y][x] = ''
                                     x += 1
                                 y += 1
