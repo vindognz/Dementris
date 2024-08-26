@@ -1,12 +1,12 @@
 # ~ Imports ~ #
+import math
 import pygame
 from random import shuffle, randrange
 from os import path as osPath, execv
+import sys
 from copy import deepcopy
 from json import load as jsonLoad
 from json import dump as jsonDump
-from subprocess import run as subprocessRun
-import sys
 
 # Inits
 pygame.init()
@@ -49,6 +49,7 @@ def getGraphValues(image_path):
 
 spreadParticleSizeCurve = getGraphValues('spreadParticleSize.png')
 moveShapeAnimCurve = getGraphValues('moveShapeAnim.png')
+thudForceCurve = getGraphValues('thudForce.png')
 
 # - Load controls - #
 controls = {
@@ -101,7 +102,6 @@ right_collided = False
 running = True
 closed = False
 paused = False
-reset = False
 dementia = True
 AREpaused = False
 AREpauseLength = 0
@@ -402,7 +402,7 @@ def clearLine(y: int):
     temp = []
     for pos,piece in stamps:
         if piece.globaly <= y:
-            thud += 2
+            thud += 1
         if piece.globaly != y:
             temp.append((pos,piece))
         else:
@@ -546,7 +546,6 @@ while replay:
     holding_input = False
     holding_down = False
     running = True
-    reset = False
     closed = False
     paused = False
     dementia = True
@@ -593,7 +592,7 @@ while replay:
     timers['move'].deactivate()
     timers['soft down'].deactivate()
     timers['demeter'].deactivate()
-    while running and (not reset):  
+    while running:  
         deltaTime = clock.tick(frameRate) / 1000
         if not paused:
             for timer in timers.values():
@@ -756,7 +755,7 @@ while replay:
             if holding_down and not (getInp('soft down') or getInp('hard down')):
                 holding_down = False
             if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided:
-                shakeScreen(pygame.Vector2(0,50))
+                shakeScreen(pygame.Vector2(0,75))
                 if (timers['soft down'].finished or speed == 1):
                     currentShape.y += 1
                     getCollision()
@@ -765,7 +764,7 @@ while replay:
                     timers['fall'].activate()
             if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
                 currentShape.y = ghostShape.y
-                shakeScreen(pygame.Vector2(0,100))
+                shakeScreen(pygame.Vector2(0,400))
                 getCollision()
 
         # Rendering
@@ -888,7 +887,7 @@ while replay:
                 if cleared:
                     clearLine(i)
                     cleared_count += 1
-                    shakeScreen(pygame.Vector2(0,thud*10))
+                    shakeScreen(pygame.Vector2(0,25*thudForceCurve[thud]))
                 i += 1
 
 
@@ -933,7 +932,7 @@ while replay:
     # Window closed logic
     else:
         game_over = True
-        while (game_over and not closed) and not reset:
+        while (game_over and not closed):
             for event in pygame.event.get():
                 # Detect window closed
                 if event.type == pygame.QUIT:
