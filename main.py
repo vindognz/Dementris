@@ -689,7 +689,6 @@ while replay:
                     replay = False
                 if event.key in controls['toggle ghost']:
                     show_ghost = not show_ghost
-                    demeter = 80
                 if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['left rotate'] and currentShape.getCenterPiece():
                     currentShape.rotate(-1)
                     kicked = False
