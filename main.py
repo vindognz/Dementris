@@ -1,5 +1,4 @@
 # ~ Imports ~ #
-import math
 import pygame
 from random import shuffle, randrange
 from os import path as osPath, execv
