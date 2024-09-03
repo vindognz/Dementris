@@ -972,7 +972,7 @@ while replay:
                 if cleared:
                     clearLine(i)
                     cleared_count += 1
-                    shakeScreen(pygame.Vector2(0,25*thudForceCurve[thud]))
+                    shakeScreen(pygame.Vector2(0,10*thudForceCurve[thud]))
                 i += 1
 
 
