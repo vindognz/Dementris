@@ -1,13 +1,14 @@
 # ~ Imports ~ #
 import pygame
 from random import shuffle, randrange
-from os import path as osPath, execv
+from os import path as osPath, execv, chdir
 import sys
 from copy import deepcopy
 from json import load as jsonLoad
 from json import dump as jsonDump
 
 # Inits
+chdir(sys.path[0])
 pygame.init()
 clock = pygame.time.Clock()
 
@@ -23,7 +24,7 @@ pygame.display.set_icon(icon)
 screen = pygame.image.load('images/gui/bg.png').convert()
 paused_overlay = pygame.image.load('images/gui/paused.png').convert_alpha()
 death_overlay = pygame.image.load('images/gui/gameOver.png').convert_alpha()
-pivot_sprite = pygame.image.load(f'images/pieces/pivot.png').convert_alpha()
+pivot_sprite = pygame.image.load('images/pieces/pivot.png').convert_alpha()
 lvl_up_particle = pygame.image.load('images/gui/lvlUpParticle.png').convert_alpha()
 
 pieces = [
@@ -682,7 +683,7 @@ while replay:
                 if event.key in controls['pause']:
                     paused = not paused
                 if event.key in controls['reset']:
-                    execv(sys.executable, ['python'] + sys.argv)
+                    execv(sys.executable, ['python'] + [sys.argv[-1]])
                 if event.key in controls['quit']:
                     closed = True
                     replay = False
