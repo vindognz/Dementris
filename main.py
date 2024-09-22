@@ -90,50 +90,19 @@ else:
                 temp.append(pygame.key.name(key))
             convertedControls[k] = temp
         jsonDump(convertedControls,file)
-# - Load controls - #
-# Define variables
+
+# 1st batch of var definitions
 
 frameRate = 60
 show_ghost = True
-
-holding_input = False
-holding_down = False
-left_collided = False
-right_collided = False
-running = True
-closed = False
-paused = False
-dementia = True
-AREpaused = False
-AREpauseLength = 0
-linesCleared = 0
-demeter = 0
-
 showPivot = True
 
-holdAnimFrames = -1
-holdAnim_mode = 'current to hold'
-# possible modes: 'current to hold', 'swap'
-holdAnim_oldCurrentPos = (0,0)
-holdAnim_newCurrentPos = (0,0)
-holdAnim_oldCurrentRot = 0
-
-nextAnimFrames = -1
-
-offset = pygame.Vector2(0,0)
-lastOffset = pygame.Vector2(0,0)
-deltaTime = 0
 springConstant = 500
 damping = 10
 velocity = pygame.Vector2(0,0)
 
-lines = 0
-lvl = 0
 speed = 48
-
 doParticles = True
-spreadParticles = []
-dustParticles = []
 
 # Map storage
 tileMap = []
@@ -573,462 +542,462 @@ timers = {
 # - Timers - #
 
 # Main game loop
-while replay:
-    clearMap()
-    stamps = []
-    flash_stamps = []
-    left_collided = False
-    right_collided = False
-    holding_input = False
-    holding_down = False
-    running = True
-    closed = False
-    paused = False
-    dementia = True
-    AREpaused = False
-    AREpauseLength = 0
-    linesCleared = 0
-    demeter = 0
+clearMap()
+stamps = []
+flash_stamps = []
+left_collided = False
+right_collided = False
+holding_input = False
+holding_down = False
+running = True
+closed = False
+paused = False
+dementia = True
+AREpaused = False
+AREpauseLength = 0
+linesCleared = 0
+demeter = 0
 
-    offset = pygame.Vector2(0,0)
-    lastOffset = pygame.Vector2(0,0)
-    deltaTime = 0
-    thud = 0
+offset = pygame.Vector2(0,0)
+lastOffset = pygame.Vector2(0,0)
+deltaTime = 0
+thud = 0
 
-    spreadParticles = []
-    dustParticles = []
+spreadParticles = []
+dustParticles = []
 
-    holdAnimFrames = -1
-    holdAnim_mode = 'current to hold'
-    # possible modes: 'current to hold', 'swap'
-    holdAnim_oldCurrentPos = (0,0)
-    holdAnim_newCurrentPos = (0,0)
-    holdAnim_oldCurrentRot = 0
+holdAnimFrames = -1
+holdAnim_mode = 'current to hold'
+# possible modes: 'current to hold', 'swap'
+holdAnim_oldCurrentPos = (0,0)
+holdAnim_newCurrentPos = (0,0)
+holdAnim_oldCurrentRot = 0
 
-    nextAnimFrames = -1
+nextAnimFrames = -1
 
-    lines = 0
-    lvl = 0
-    speed = 48
-    Shapes.bag = []
-    currentShape = Shapes.fromBag()
-    currentShape.x = 4
-    currentShape.y = 0
-    currentShape.rotation = 1
-    currentShape.rotate(-1)
-    nextShape = Shapes.fromBag()
-    nextShape.x = 4
-    nextShape.y = 0
-    nextShape.rotation = 1
-    nextShape.rotate(-1)
-    holdShape = None
-    holdCount = 0
-    ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+lines = 0
+lvl = 0
+speed = 48
+Shapes.bag = []
+currentShape = Shapes.fromBag()
+currentShape.x = 4
+currentShape.y = 0
+currentShape.rotation = 1
+currentShape.rotate(-1)
+nextShape = Shapes.fromBag()
+nextShape.x = 4
+nextShape.y = 0
+nextShape.rotation = 1
+nextShape.rotate(-1)
+holdShape = None
+holdCount = 0
+ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
 
-    timers['fall'].activate()
-    timers['move'].deactivate()
-    timers['soft down'].deactivate()
-    timers['demeter'].deactivate()
-    while running:  
-        deltaTime = clock.tick(frameRate) / 1000
-        if not paused:
-            for timer in timers.values():
-                timer.update()
+timers['fall'].activate()
+timers['move'].deactivate()
+timers['soft down'].deactivate()
+timers['demeter'].deactivate()
+while running:  
+    deltaTime = clock.tick(frameRate) / 1000
+    if not paused:
+        for timer in timers.values():
+            timer.update()
+    for event in pygame.event.get():
+        # Detect window closed
+        if event.type == pygame.QUIT:
+            closed = True
+            replay = False
+        if event.type == pygame.KEYDOWN:
+            if event.key in controls['dementia']:
+                if not AREpaused:
+                    # nuke
+                    if demeter >= 80:
+                        demeter = 0
+                        y = 0
+                        tilesCleared = 0
+                        for row in tileMap:
+                            x = 0
+                            for tile in row:
+                                if tileMap[y][x] != '':
+                                    tilesCleared += 1
+                                    dustParticles.append(DustParticles(8,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
+                                    tileMap[y][x] = ''
+                                x += 1
+                            y += 1
+                            for i in range(tilesCleared // 10):
+                                lines += 1
+                                if lines % 20 == 0: # nerfed the nuke by making you only recieve 1/2 the levels you would have gotten
+                                    lvl += 1
+                                    if doParticles:
+                                        spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
+                                    if lvl < 9:
+                                        speed -= 3
+                                    elif lvl == 9:
+                                        speed -= 2
+                                    elif lvl in [10,13,16,19,29]:
+                                        speed -= 1
+                                    if lvl > 99:
+                                        lvl = 99
+                                        speed = 48
+                                if lines > 999:
+                                    lines = 999
+                    dementia = not dementia
+                    if (not dementia) and demeter <= 0:
+                        dementia = True
+                        demeter = 0
+
+            if event.key in controls['toggle pivot indicator']:
+                showPivot = not showPivot
+            if event.key in controls['pause']:
+                paused = not paused
+            if event.key in controls['reset']:
+                execv(sys.executable, ['python'] + [sys.argv[-1]])
+            if event.key in controls['quit']:
+                closed = True
+                replay = False
+            if event.key in controls['toggle ghost']:
+                demeter += 10
+                show_ghost = not show_ghost
+            if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['left rotate'] and currentShape.getCenterPiece():
+                currentShape.rotate(-1)
+                kicked = False
+                i = True
+                out = False
+                for piece in currentShape.pieces:
+                    if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
+                        i = False
+                        out = getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT'
+                        break
+                if (not i) and out:
+                    oldX = currentShape.x
+                    ii = False
+                    for piece in currentShape.pieces:
+                        if currentShape.x+piece.localx >= 10:
+                            currentShape.x = 10-currentShape.width
+                            ii = True
+                            break
+                        elif currentShape.x+piece.localx <= -1:
+                            currentShape.x = 0
+                            ii = True
+                            break
+                    if ii:
+                        kicked = True
+                        i = True
+                        for piece in currentShape.pieces:
+                            if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
+                                i = False
+                                break
+                        if not i:
+                            currentShape.x = oldX
+                if i:
+                    getCollision()
+                    if kicked:
+                        shakeScreen(pygame.Vector2(100,0))
+                else:
+                    currentShape.rotate(1)
+                    getCollision()
+            if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['right rotate'] and currentShape.getCenterPiece():
+                currentShape.rotate(1)
+                i = True
+                kicked = False
+                out = False
+                for piece in currentShape.pieces:
+                    if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
+                        i = False
+                        out = getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT'
+                        break
+                if (not i) and out:
+                    oldX = currentShape.x
+                    ii = False
+                    for piece in currentShape.pieces:
+                        if currentShape.x+piece.localx >= 10:
+                            currentShape.x = 10-currentShape.width
+                            ii = True
+                            break
+                        elif currentShape.x+piece.localx <= -1:
+                            currentShape.x = 0
+                            ii = True
+                            break
+                    if ii:
+                        kicked = True
+                        i = True
+                        for piece in currentShape.pieces:
+                            if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
+                                i = False
+                                break
+                        if not i:
+                            currentShape.x = oldX
+                if i:
+                    getCollision()
+                    if kicked:
+                        shakeScreen(pygame.Vector2(100,0))
+                else:
+                    currentShape.rotate(-1)
+                    getCollision()
+            if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['hold'] and holdCount == 0:
+                if holdShape == None:
+                    holdAnim_mode = 'current to hold'
+                    holdAnim_oldCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
+                    holdAnim_oldCurrentRot = currentShape.rotation
+                    currentShape.x = 4
+                    currentShape.y = 0
+                    currentShape.rotation = 1
+                    currentShape.rotate(-1)
+                    holdShape = currentShape
+                    nextShape.x = 4
+                    nextShape.y = 0
+                    nextShape.rotation = 1
+                    nextShape.rotate(-1)
+                    currentShape = nextShape
+                    ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+                    nextShape = Shapes.fromBag()
+                    nextAnimFrames = len(moveShapeAnimCurve)
+                else:
+                    holdAnim_mode = 'swap'
+                    holdAnim_oldCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
+                    holdAnim_oldCurrentRot = currentShape.rotation
+                    currentShape.x = 4
+                    currentShape.y = 0
+                    holdAnim_newCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
+                    currentShape.rotation = 1
+                    currentShape.rotate(-1)
+                    holdShape.x = 4
+                    holdShape.y = 0
+                    holdShape.rotation = 1
+                    holdShape.rotate(-1)
+                    temp = currentShape
+                    currentShape = holdShape
+                    holdShape = temp
+                    del temp
+                    ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+                holdCount += 1
+                getCollision()
+                holdAnimFrames = len(moveShapeAnimCurve)
+    if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0):
+        # Input
+        if (not getInp('move left')) and (not getInp('move right')):
+            holding_input = False
+            timers['move'].deactivate()
+        if getInp('move left') and (not getInp('move right')) and (not left_collided) and timers['move'].finished:
+            currentShape.x -= 1
+            getCollision()
+            if holding_input == False:
+                timers['move'].duration = 16
+            else:
+                timers['move'].duration = 6
+            timers['move'].activate()
+            holding_input = True
+        if getInp('move right') and (not getInp('move left')) and (not right_collided) and timers['move'].finished:
+            currentShape.x += 1
+            getCollision()
+            if holding_input == False:
+                timers['move'].duration = 16
+            else:
+                timers['move'].duration = 6
+            timers['move'].activate()
+            holding_input = True
+        if holding_down and not (getInp('soft down') or getInp('hard down')):
+            holding_down = False
+        if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided:
+            shakeScreen(pygame.Vector2(0,75))
+            if (timers['soft down'].finished or speed == 1):
+                currentShape.y += 1
+                getCollision()
+                timers['soft down'].duration = 2
+                timers['soft down'].activate()
+                timers['fall'].activate()
+        if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
+            currentShape.y = ghostShape.y
+            shakeScreen(pygame.Vector2(0,400))
+            getCollision()
+
+    # Rendering
+    screen = pygame.image.load('images/gui/bg.png').convert_alpha()
+    screen.fill('black')
+    if not AREpaused:
+        stamps = []
+        y = 0
+        for row in tileMap:
+            x = 0
+            for tile in row:
+                if tile != '':
+                    sprite = pygame.sprite.Sprite()
+                    sprite.image = pygame.image.load(f'images/pieces/{all_shapes[tile].piece_sprite}.png').convert_alpha()
+                    sprite.rect = sprite.image.get_rect()
+                    sprite.globaly = y
+                    stamps.append(((96+8*x,40+8*y),sprite))
+                x += 1
+            y += 1
+    drawStamps()
+    if AREpaused:
+        flashStamps()
+    # Test game over
+    for c in tileMap[0]:
+        if c != '':
+            running = False
+            break
+    if nextAnimFrames < 0:
+        screen.blit(nextShape.gui_sprite,(191+2,95+10))
+    else:
+        nextShapeGui_scaled = pygame.transform.scale(nextShape.gui_sprite.copy(),pygame.Vector2(33,42)*(0.01*moveShapeAnimCurve[nextAnimFrames-1]))
+        screen.blit(nextShapeGui_scaled,pygame.Vector2(193+15.5,105+21)-(pygame.Vector2(nextShapeGui_scaled.get_size())/2))
+    if holdAnimFrames < 0:
+        if holdShape != None:
+            screen.blit(holdShape.gui_sprite,(80-holdShape.gui_sprite.get_width(),95))
+        if nextAnimFrames < 0:
+            if show_ghost:
+                ghostShape.draw()
+            currentShape.draw()
+
+    layer3 = pygame.surface.Surface((256,224), pygame.SRCALPHA)
+    layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
+    screen.blit(layer1,(0,0))
+    screen.blit(layer3,(0,0))
+    writeNums((59-11,72),lines,3)
+    writeNums((204,72),lvl,2)
+
+    if doParticles:
+        for _spreadParticles in spreadParticles:
+            if len(_spreadParticles.particles) == 0:
+                spreadParticles.remove(_spreadParticles)
+            else:
+                if (not paused) and running:
+                    _spreadParticles.draw(screen)
+    if doParticles:
+        for _dustParticles in dustParticles:
+            if len(_dustParticles.particles) == 0:
+                dustParticles.remove(_dustParticles)
+            else:
+                if (not paused) and running:
+                    _dustParticles.draw(screen)
+
+    if not paused and holdAnimFrames >= 0:
+        if holdAnimFrames > 0:
+            if holdAnim_mode == 'current to hold':
+                diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(),95)
+                rotDiff = 0
+                if holdAnim_oldCurrentRot >= 2:
+                    rotDiff = (90*holdAnim_oldCurrentRot)
+                else:
+                    rotDiff = (-90*holdAnim_oldCurrentRot)
+                rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
+                screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+            elif holdAnim_mode == 'swap':
+                diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(),95)
+                rotDiff = 0
+                if holdAnim_oldCurrentRot >= 2:
+                    rotDiff = (90*holdAnim_oldCurrentRot)
+                else:
+                    rotDiff = (-90*holdAnim_oldCurrentRot)
+                rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
+                screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+                diff = pygame.Vector2(80-holdShape.gui_sprite.get_width(),95) - pygame.Vector2(holdAnim_newCurrentPos)
+                screen.blit(currentShape.gui_sprite,pygame.Vector2(80-holdShape.gui_sprite.get_width(),95) - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+        holdAnimFrames -= 1
+    if not paused and nextAnimFrames >= 0:
+        if nextAnimFrames > 0:
+            diff = pygame.Vector2(193,105) - (130,50)
+            screen.blit(currentShape.gui_sprite.copy(),(193,105) - ((moveShapeAnimCurve[nextAnimFrames-1]*0.01)*diff))
+        else:
+            timers['fall'].duration = speed
+            timers['fall'].activate()
+        nextAnimFrames -= 1
+
+
+    if demeter == 80:
+        pygame.draw.rect(screen,"#00ff00", pygame.Rect(96, 211, demeter, 9))
+    else:
+        pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
+
+    if paused and running:
+        screen.blit(paused_overlay,(0,0))
+    if not running:
+        screen.blit(death_overlay,(0,0))
+
+    scaled = pygame.transform.scale(screen, display.get_size())
+    shakeScreen(pygame.Vector2(0,0))
+    display.fill('black')
+    display.blit(scaled, (-8*(display.get_width()//screen.get_width())+offset[0]*100, offset[1]*100-50))
+    pygame.display.flip()
+
+    if (not paused) and (not AREpaused):
+        if not dementia and demeter > 0:
+            if timers['demeter'].finished:
+                timers['demeter'].activate()
+                demeter -= 2
+        if demeter <= 0:
+            demeter = 0
+            dementia = True
+        # Collision and line clearing
+        getCollision()
+
+        i = 0
+        cleared_count = 0
+        for row in tileMap:
+            cleared = True
+            for x in row:
+                if x == '':
+                    cleared = False
+                    break
+            if cleared:
+                clearLine(i)
+                cleared_count += 1
+                shakeScreen(pygame.Vector2(0,10*thudForceCurve[thud]))
+            i += 1
+
+
+        if collided and (timers['fall'].finished or getInp('hard down')):
+            currentShape.stamp()
+            nextShape.x = 4
+            nextShape.y = 0
+            nextShape.rotation = 1
+            nextShape.rotate(-1)
+            currentShape = nextShape
+            ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+            nextShape = Shapes.fromBag()
+            nextAnimFrames = len(moveShapeAnimCurve)
+            holdCount = 0
+            if getInp('soft down') or getInp('hard down'):
+                holding_down = True
+        elif timers['fall'].finished and (holdAnimFrames < 0 and nextAnimFrames < 0) and not ((not holding_down) and (getInp('soft down') or getInp('hard down'))):
+            currentShape.y += 1
+            timers['fall'].duration = speed
+            timers['fall'].activate()
+    if AREpaused and AREpauseLength > 0:
+        AREpauseLength -= 1
+        if AREpauseLength == 0:
+            AREpaused = False
+            temp = []
+            topBadY = 20
+            for stamp in flash_stamps:
+                y = stamp[1].globaly
+                if y < topBadY:
+                    topBadY = y
+            for pos,piece in stamps:
+                if piece.globaly < topBadY:
+                    piece.globaly += linesCleared
+                    temp.append(((pos[0],pos[1]+8*linesCleared),piece))
+                else:
+                    temp.append((pos,piece))
+            flash_stamps = []
+            stamps = temp
+            linesCleared = 0
+    if closed:
+        running = False
+    # Window closed logic
+else:
+    game_over = True
+    while (game_over and not closed):
         for event in pygame.event.get():
             # Detect window closed
             if event.type == pygame.QUIT:
-                closed = True
+                game_over = False
                 replay = False
             if event.type == pygame.KEYDOWN:
-                if event.key in controls['dementia']:
-                    if not AREpaused:
-                        # nuke
-                        if demeter >= 80:
-                            demeter = 0
-                            y = 0
-                            tilesCleared = 0
-                            for row in tileMap:
-                                x = 0
-                                for tile in row:
-                                    if tileMap[y][x] != '':
-                                        tilesCleared += 1
-                                        dustParticles.append(DustParticles(8,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
-                                        tileMap[y][x] = ''
-                                    x += 1
-                                y += 1
-                                for i in range(tilesCleared // 10):
-                                    lines += 1
-                                    if lines % 20 == 0: # nerfed the nuke by making you only recieve 1/2 the levels you would have gotten
-                                        lvl += 1
-                                        if doParticles:
-                                            spreadParticles.append(SpreadParticles(25,screen.get_width()//2,screen.get_height()//2,0.2,lvl_up_particle))
-                                        if lvl < 9:
-                                            speed -= 3
-                                        elif lvl == 9:
-                                            speed -= 2
-                                        elif lvl in [10,13,16,19,29]:
-                                            speed -= 1
-                                        if lvl > 99:
-                                            lvl = 99
-                                            speed = 48
-                                    if lines > 999:
-                                        lines = 999
-                        dementia = not dementia
-                        if (not dementia) and demeter <= 0:
-                            dementia = True
-                            demeter = 0
-
-                if event.key in controls['toggle pivot indicator']:
-                    showPivot = not showPivot
-                if event.key in controls['pause']:
-                    paused = not paused
-                if event.key in controls['reset']:
-                    execv(sys.executable, ['python'] + [sys.argv[-1]])
                 if event.key in controls['quit']:
                     closed = True
                     replay = False
-                if event.key in controls['toggle ghost']:
-                    show_ghost = not show_ghost
-                if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['left rotate'] and currentShape.getCenterPiece():
-                    currentShape.rotate(-1)
-                    kicked = False
-                    i = True
-                    out = False
-                    for piece in currentShape.pieces:
-                        if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
-                            i = False
-                            out = getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT'
-                            break
-                    if (not i) and out:
-                        oldX = currentShape.x
-                        ii = False
-                        for piece in currentShape.pieces:
-                            if currentShape.x+piece.localx >= 10:
-                                currentShape.x = 10-currentShape.width
-                                ii = True
-                                break
-                            elif currentShape.x+piece.localx <= -1:
-                                currentShape.x = 0
-                                ii = True
-                                break
-                        if ii:
-                            kicked = True
-                            i = True
-                            for piece in currentShape.pieces:
-                                if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
-                                    i = False
-                                    break
-                            if not i:
-                                currentShape.x = oldX
-                    if i:
-                        getCollision()
-                        if kicked:
-                            shakeScreen(pygame.Vector2(100,0))
-                    else:
-                        currentShape.rotate(1)
-                        getCollision()
-                if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['right rotate'] and currentShape.getCenterPiece():
-                    currentShape.rotate(1)
-                    i = True
-                    kicked = False
-                    out = False
-                    for piece in currentShape.pieces:
-                        if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
-                            i = False
-                            out = getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT'
-                            break
-                    if (not i) and out:
-                        oldX = currentShape.x
-                        ii = False
-                        for piece in currentShape.pieces:
-                            if currentShape.x+piece.localx >= 10:
-                                currentShape.x = 10-currentShape.width
-                                ii = True
-                                break
-                            elif currentShape.x+piece.localx <= -1:
-                                currentShape.x = 0
-                                ii = True
-                                break
-                        if ii:
-                            kicked = True
-                            i = True
-                            for piece in currentShape.pieces:
-                                if getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx,currentShape.y+piece.localy) != '':
-                                    i = False
-                                    break
-                            if not i:
-                                currentShape.x = oldX
-                    if i:
-                        getCollision()
-                        if kicked:
-                            shakeScreen(pygame.Vector2(100,0))
-                    else:
-                        currentShape.rotate(-1)
-                        getCollision()
-                if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0) and event.key in controls['hold'] and holdCount == 0:
-                    if holdShape == None:
-                        holdAnim_mode = 'current to hold'
-                        holdAnim_oldCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
-                        holdAnim_oldCurrentRot = currentShape.rotation
-                        currentShape.x = 4
-                        currentShape.y = 0
-                        currentShape.rotation = 1
-                        currentShape.rotate(-1)
-                        holdShape = currentShape
-                        nextShape.x = 4
-                        nextShape.y = 0
-                        nextShape.rotation = 1
-                        nextShape.rotate(-1)
-                        currentShape = nextShape
-                        ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
-                        nextShape = Shapes.fromBag()
-                        nextAnimFrames = len(moveShapeAnimCurve)
-                    else:
-                        holdAnim_mode = 'swap'
-                        holdAnim_oldCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
-                        holdAnim_oldCurrentRot = currentShape.rotation
-                        currentShape.x = 4
-                        currentShape.y = 0
-                        holdAnim_newCurrentPos = (96+(8*(currentShape.x))+2,40+(8*(currentShape.y))+10)
-                        currentShape.rotation = 1
-                        currentShape.rotate(-1)
-                        holdShape.x = 4
-                        holdShape.y = 0
-                        holdShape.rotation = 1
-                        holdShape.rotate(-1)
-                        temp = currentShape
-                        currentShape = holdShape
-                        holdShape = temp
-                        del temp
-                        ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
-                    holdCount += 1
-                    getCollision()
-                    holdAnimFrames = len(moveShapeAnimCurve)
-        if (not paused) and (not AREpaused) and (holdAnimFrames < 0 and nextAnimFrames < 0):
-            # Input
-            if (not getInp('move left')) and (not getInp('move right')):
-                holding_input = False
-                timers['move'].deactivate()
-            if getInp('move left') and (not getInp('move right')) and (not left_collided) and timers['move'].finished:
-                currentShape.x -= 1
-                getCollision()
-                if holding_input == False:
-                    timers['move'].duration = 16
-                else:
-                    timers['move'].duration = 6
-                timers['move'].activate()
-                holding_input = True
-            if getInp('move right') and (not getInp('move left')) and (not right_collided) and timers['move'].finished:
-                currentShape.x += 1
-                getCollision()
-                if holding_input == False:
-                    timers['move'].duration = 16
-                else:
-                    timers['move'].duration = 6
-                timers['move'].activate()
-                holding_input = True
-            if holding_down and not (getInp('soft down') or getInp('hard down')):
-                holding_down = False
-            if ((not holding_down) and getInp('soft down')) and currentShape.y + currentShape.height < 20 and not collided:
-                shakeScreen(pygame.Vector2(0,75))
-                if (timers['soft down'].finished or speed == 1):
-                    currentShape.y += 1
-                    getCollision()
-                    timers['soft down'].duration = 2
-                    timers['soft down'].activate()
-                    timers['fall'].activate()
-            if ((not holding_down) and getInp('hard down')) and currentShape.y < ghostShape.y and not collided:
-                currentShape.y = ghostShape.y
-                shakeScreen(pygame.Vector2(0,400))
-                getCollision()
-
-        # Rendering
-        screen = pygame.image.load('images/gui/bg.png').convert_alpha()
-        screen.fill('black')
-        if not AREpaused:
-            stamps = []
-            y = 0
-            for row in tileMap:
-                x = 0
-                for tile in row:
-                    if tile != '':
-                        sprite = pygame.sprite.Sprite()
-                        sprite.image = pygame.image.load(f'images/pieces/{all_shapes[tile].piece_sprite}.png').convert_alpha()
-                        sprite.rect = sprite.image.get_rect()
-                        sprite.globaly = y
-                        stamps.append(((96+8*x,40+8*y),sprite))
-                    x += 1
-                y += 1
-        drawStamps()
-        if AREpaused:
-            flashStamps()
-        # Test game over
-        for c in tileMap[0]:
-            if c != '':
-                running = False
-                break
-        if nextAnimFrames < 0:
-            screen.blit(nextShape.gui_sprite,(191+2,95+10))
-        else:
-            nextShapeGui_scaled = pygame.transform.scale(nextShape.gui_sprite.copy(),pygame.Vector2(33,42)*(0.01*moveShapeAnimCurve[nextAnimFrames-1]))
-            screen.blit(nextShapeGui_scaled,pygame.Vector2(193+15.5,105+21)-(pygame.Vector2(nextShapeGui_scaled.get_size())/2))
-        if holdAnimFrames < 0:
-            if holdShape != None:
-                screen.blit(holdShape.gui_sprite,(80-holdShape.gui_sprite.get_width(),95))
-            if nextAnimFrames < 0:
-                if show_ghost:
-                    ghostShape.draw()
-                currentShape.draw()
-
-        layer3 = pygame.surface.Surface((256,224), pygame.SRCALPHA)
-        layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
-        screen.blit(layer1,(0,0))
-        screen.blit(layer3,(0,0))
-        writeNums((59-11,72),lines,3)
-        writeNums((204,72),lvl,2)
-
-        if doParticles:
-            for _spreadParticles in spreadParticles:
-                if len(_spreadParticles.particles) == 0:
-                    spreadParticles.remove(_spreadParticles)
-                else:
-                    if (not paused) and running:
-                        _spreadParticles.draw(screen)
-        if doParticles:
-            for _dustParticles in dustParticles:
-                if len(_dustParticles.particles) == 0:
-                    dustParticles.remove(_dustParticles)
-                else:
-                    if (not paused) and running:
-                        _dustParticles.draw(screen)
-
-        if not paused and holdAnimFrames >= 0:
-            if holdAnimFrames > 0:
-                if holdAnim_mode == 'current to hold':
-                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(),95)
-                    rotDiff = 0
-                    if holdAnim_oldCurrentRot >= 2:
-                        rotDiff = (90*holdAnim_oldCurrentRot)
-                    else:
-                        rotDiff = (-90*holdAnim_oldCurrentRot)
-                    rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
-                    screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
-                elif holdAnim_mode == 'swap':
-                    diff = pygame.Vector2(holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(),95)
-                    rotDiff = 0
-                    if holdAnim_oldCurrentRot >= 2:
-                        rotDiff = (90*holdAnim_oldCurrentRot)
-                    else:
-                        rotDiff = (-90*holdAnim_oldCurrentRot)
-                    rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
-                    screen.blit(rotated,holdAnim_oldCurrentPos - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
-                    diff = pygame.Vector2(80-holdShape.gui_sprite.get_width(),95) - pygame.Vector2(holdAnim_newCurrentPos)
-                    screen.blit(currentShape.gui_sprite,pygame.Vector2(80-holdShape.gui_sprite.get_width(),95) - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
-            holdAnimFrames -= 1
-        if not paused and nextAnimFrames >= 0:
-            if nextAnimFrames > 0:
-                diff = pygame.Vector2(193,105) - (130,50)
-                screen.blit(currentShape.gui_sprite.copy(),(193,105) - ((moveShapeAnimCurve[nextAnimFrames-1]*0.01)*diff))
-            else:
-                timers['fall'].duration = speed
-                timers['fall'].activate()
-            nextAnimFrames -= 1
-
-
-        if demeter == 80:
-            pygame.draw.rect(screen,"#00ff00", pygame.Rect(96, 211, demeter, 9))
-        else:
-            pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
-
-        if paused and running:
-            screen.blit(paused_overlay,(0,0))
-        if not running:
-            screen.blit(death_overlay,(0,0))
-
-        scaled = pygame.transform.scale(screen, display.get_size())
-        shakeScreen(pygame.Vector2(0,0))
-        display.fill('black')
-        display.blit(scaled, (-8*(display.get_width()//screen.get_width())+offset[0]*100, offset[1]*100-50))
-        pygame.display.flip()
-
-        if (not paused) and (not AREpaused):
-            if not dementia and demeter > 0:
-                if timers['demeter'].finished:
-                    timers['demeter'].activate()
-                    demeter -= 2
-            if demeter <= 0:
-                demeter = 0
-                dementia = True
-            # Collision and line clearing
-            getCollision()
-
-            i = 0
-            cleared_count = 0
-            for row in tileMap:
-                cleared = True
-                for x in row:
-                    if x == '':
-                        cleared = False
-                        break
-                if cleared:
-                    clearLine(i)
-                    cleared_count += 1
-                    shakeScreen(pygame.Vector2(0,10*thudForceCurve[thud]))
-                i += 1
-
-
-            if collided and (timers['fall'].finished or getInp('hard down')):
-                currentShape.stamp()
-                nextShape.x = 4
-                nextShape.y = 0
-                nextShape.rotation = 1
-                nextShape.rotate(-1)
-                currentShape = nextShape
-                ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
-                nextShape = Shapes.fromBag()
-                nextAnimFrames = len(moveShapeAnimCurve)
-                holdCount = 0
-                if getInp('soft down') or getInp('hard down'):
-                    holding_down = True
-            elif timers['fall'].finished and (holdAnimFrames < 0 and nextAnimFrames < 0) and not ((not holding_down) and (getInp('soft down') or getInp('hard down'))):
-                currentShape.y += 1
-                timers['fall'].duration = speed
-                timers['fall'].activate()
-        if AREpaused and AREpauseLength > 0:
-            AREpauseLength -= 1
-            if AREpauseLength == 0:
-                AREpaused = False
-                temp = []
-                topBadY = 20
-                for stamp in flash_stamps:
-                    y = stamp[1].globaly
-                    if y < topBadY:
-                        topBadY = y
-                for pos,piece in stamps:
-                    if piece.globaly < topBadY:
-                        piece.globaly += linesCleared
-                        temp.append(((pos[0],pos[1]+8*linesCleared),piece))
-                    else:
-                        temp.append((pos,piece))
-                flash_stamps = []
-                stamps = temp
-                linesCleared = 0
-        if closed:
-            running = False
-    # Window closed logic
-    else:
-        game_over = True
-        while (game_over and not closed):
-            for event in pygame.event.get():
-                # Detect window closed
-                if event.type == pygame.QUIT:
+                if event.key == pygame.K_RETURN:
                     game_over = False
-                    replay = False
-                if event.type == pygame.KEYDOWN:
-                    if event.key in controls['quit']:
-                        closed = True
-                        replay = False
-                    if event.key == pygame.K_RETURN:
-                        game_over = False
-else:
-    print('crashed :(') # we love how this is still here lmao
+    else:
+        print('crashed :(') # we love how this is still here lmao
