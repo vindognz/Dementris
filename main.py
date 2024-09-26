@@ -119,6 +119,9 @@ clearMap()
 def setTileonMap(x,y, value):
     try:
         tileMap[y][x] = value
+        tilesPlaced.append((x,y))
+        while len(tilesPlaced) > round((demeter+2) // (2/0.75)):
+            tilesPlaced.pop(0)
         return value
     except IndexError:
         return (x,y)
@@ -137,14 +140,18 @@ def rotateTable(table):
 
 # Rendering
 stamps = []
+tilesPlaced = []
 def drawStamps():
-    for i in range(len(stamps)):
-        if not dementia or i < demeter/10+10:
-            stamps[i][1].image.set_alpha(round(max(0,(demeter/10+10)-i)*32))
-            screen.blit(stamps[i][1].image, stamps[i][0])
-        if not dementia:
-            stamps[i][1].image.set_alpha(255)
-            screen.blit(stamps[i][1].image,stamps[i][0])
+    if dementia:
+        # print(tilesPlaced)
+        for i,pos in enumerate(tilesPlaced):
+            stamp = [s for _pos,s in stamps if _pos == pos][0] or None
+            if stamp:
+                stamp.image.set_alpha(round(255*(0.01*(i/len(tilesPlaced)))))
+                screen.blit(stamp.image, pos)
+    else:
+        stamps[i][1].image.set_alpha(255)
+        screen.blit(stamps[i][1].image,stamps[i][0])
 
 TotalAREpauseLength = 60
 AREFlashes = 3
@@ -427,9 +434,9 @@ def clearLine(y: int):
         if lvl < 9:
             speed -= 5
         elif lvl == 9:
-            speed -= 3
-        elif lvl in [10,13,16,19,29]:
             speed -= 2
+        elif lvl in [10,13,16,19,29]:
+            speed -= 1
         if lvl > 99:
             lvl = 99
             speed = 48
@@ -622,6 +629,9 @@ while running:
                                     tilesCleared += 1
                                     dustParticles.append(DustParticles(8,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
                                     tileMap[y][x] = ''
+                                    for i,pos in enumerate(tilesPlaced):
+                                        if pos == (x,y):
+                                            tilesPlaced.pop(i)
                                 x += 1
                             y += 1
                             for i in range(tilesCleared // 10):
