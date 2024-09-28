@@ -22,7 +22,4 @@ i make dementia in pytetris in pygame. i forgor how pain
 **Scale 2:** 2\
 **Scale 3:** 3\
 **Scale 4:** 4\
-**Volume Up:** minus\
-**Volume Down:** plus\
-**Mute:** 0\
 **Use the demeter:** x
