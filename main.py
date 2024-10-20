@@ -116,12 +116,12 @@ def clearMap():
         tileMap.append(column)
 clearMap()
     
+tilesPlaced = []
 def setTileonMap(x,y, value):
+    global tilesPlaced
     try:
         tileMap[y][x] = value
-        tilesPlaced.append((x,y))
-        while len(tilesPlaced) > round((demeter+2) // (2/0.75)):
-            tilesPlaced.pop(0)
+        tilesPlaced.append((96+8*x,40+8*y))
         return value
     except IndexError:
         return (x,y)
@@ -140,18 +140,22 @@ def rotateTable(table):
 
 # Rendering
 stamps = []
-tilesPlaced = []
 def drawStamps():
+    global tilesPlaced
     if dementia:
-        # print(tilesPlaced)
         for i,pos in enumerate(tilesPlaced):
-            stamp = [s for _pos,s in stamps if _pos == pos][0] or None
+            stamp = next((s for _pos, s in stamps if _pos == pos), None)
             if stamp:
-                stamp.image.set_alpha(round(255*(0.01*(i/len(tilesPlaced)))))
+                alph = max(64,round(255*100*(0.01*(i/max(1,round((80-demeter)) // (2/0.75))))))
+                stamp.image.set_alpha(alph)
                 screen.blit(stamp.image, pos)
+            else:
+                tilesPlaced.pop(i)
     else:
-        stamps[i][1].image.set_alpha(255)
-        screen.blit(stamps[i][1].image,stamps[i][0])
+        for stamp in stamps:
+            stamp[1].image.set_alpha(255)
+            screen.blit(stamp[1].image,stamp[0])
+
 
 TotalAREpauseLength = 60
 AREFlashes = 3
@@ -370,7 +374,7 @@ class Shapes:
         out = list(all_shapes.values())
         shuffle(out)
         return out
-    
+
     bag = []
 
     def fromBag() -> shape:
@@ -442,6 +446,8 @@ def clearLine(y: int):
             speed = 48
     if lines > 999:
         lines = 999
+    for i,pos in enumerate(tilesPlaced):
+        tilesPlaced[i] = (pos[0],pos[1]+8)
 
 def getCollision():
     global ghostShape,ghostCollided,collided,left_collided,right_collided
@@ -629,9 +635,6 @@ while running:
                                     tilesCleared += 1
                                     dustParticles.append(DustParticles(8,96+(8*x)+4,40+(8*y)+4,pygame.image.load(f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
                                     tileMap[y][x] = ''
-                                    for i,pos in enumerate(tilesPlaced):
-                                        if pos == (x,y):
-                                            tilesPlaced.pop(i)
                                 x += 1
                             y += 1
                             for i in range(tilesCleared // 10):
