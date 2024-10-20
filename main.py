@@ -115,13 +115,10 @@ def clearMap():
             column.append('')
         tileMap.append(column)
 clearMap()
-    
-tilesPlaced = []
+
 def setTileonMap(x,y, value):
-    global tilesPlaced
     try:
         tileMap[y][x] = value
-        tilesPlaced.append((96+8*x,40+8*y))
         return value
     except IndexError:
         return (x,y)
@@ -134,28 +131,20 @@ def getTileonMap(x,y):
             return tileMap[y][x]
     except IndexError:
         return 'OUT'
-    
+
 def rotateTable(table):
     return [[*r][::-1] for r in zip(*table)]
 
 # Rendering
 stamps = []
 def drawStamps():
-    global tilesPlaced
-    if dementia:
-        for i,pos in enumerate(tilesPlaced):
-            stamp = next((s for _pos, s in stamps if _pos == pos), None)
-            if stamp:
-                alph = max(64,round(255*100*(0.01*(i/max(1,round((80-demeter)) // (2/0.75))))))
-                stamp.image.set_alpha(alph)
-                screen.blit(stamp.image, pos)
-            else:
-                tilesPlaced.pop(i)
-    else:
-        for stamp in stamps:
-            stamp[1].image.set_alpha(255)
-            screen.blit(stamp[1].image,stamp[0])
-
+    for i in range(len(stamps)):
+        if not dementia or i < demeter/10+10:
+            stamps[i][1].image.set_alpha(round(max(0,(demeter/10+10)-i)*32))
+            screen.blit(stamps[i][1].image, stamps[i][0])
+        if not dementia:
+            stamps[i][1].image.set_alpha(255)
+            screen.blit(stamps[i][1].image,stamps[i][0])
 
 TotalAREpauseLength = 60
 AREFlashes = 3
@@ -199,7 +188,7 @@ class SpreadParticles:
             colored = self.img.copy()
             colored.fill(self.color,special_flags=pygame.BLEND_RGB_MULT)
             sized = pygame.transform.scale(colored, ((spreadParticleSizeCurve[self.age]*0.01)*self.img.get_width(),(spreadParticleSizeCurve[self.age]*0.01)*self.img.get_height()))
-            surface.blit(sized,(self.x-(sized.get_width()//2),self.y-(sized.get_height()//2))) 
+            surface.blit(sized,(self.x-(sized.get_width()//2),self.y-(sized.get_height()//2)))
     def __init__(self,amount,start_x,start_y,gravity_scale,img,color=(255,255,255)) -> None:
         self.particles = []
         for i in range(amount):
@@ -227,7 +216,7 @@ class DustParticles:
             colored = self.img.copy()
             colored.fill(self.color,special_flags=pygame.BLEND_RGB_MULT)
             sized = pygame.transform.scale(colored, ((dustParticleSizeCurve[self.age]*0.01)*self.img.get_width(),(dustParticleSizeCurve[self.age]*0.01)*self.img.get_height()))
-            surface.blit(sized,(self.x-(sized.get_width()//2),self.y-(sized.get_height()//2))) 
+            surface.blit(sized,(self.x-(sized.get_width()//2),self.y-(sized.get_height()//2)))
     def __init__(self,amount,start_x,start_y,img,color=(255,255,255)) -> None:
         self.particles = []
         for i in range(amount):
@@ -260,7 +249,7 @@ class Shapes:
                 self.localx = localx
                 self.localy = localy
                 self.center = False
-                
+
         def __init__(self,id: str,piece_sprite: str,hitbox: str) -> None:
             self.id = id
             self.hitbox = hitbox
@@ -281,7 +270,7 @@ class Shapes:
                 rect.center = (17,25)
                 self.gui_sprite.blit(shape_sprite,rect)
 
-                
+
         def makePieces(self):
             self.piecesGroup = pygame.sprite.Group()
             self.pieces = []
@@ -306,7 +295,7 @@ class Shapes:
                 maxWidth = max(maxWidth,x)
             self.width = maxWidth
             self.height = self.hitbox.count('-')+1
-        
+
         def getCenterPiece(self):
             for piece in self.pieces:
                 if piece.id == self.centerPieceId: return piece
@@ -343,7 +332,7 @@ class Shapes:
                 centerPiece = self.getCenterPiece()
                 self.x += (oldCenterPieceLocalX - centerPiece.localx)
                 self.y += (oldCenterPieceLocalY - centerPiece.localy)
-            
+
         def draw(self):
             if showPivot and self.getCenterPiece():
                 self.getCenterPiece().sprite.image.blit(pivot_sprite,(0,0),special_flags=pygame.BLEND_RGBA_MIN)
@@ -353,7 +342,7 @@ class Shapes:
                 piece.sprite.rect.x = 96+(8*(self.x+piece.localx))
                 piece.sprite.rect.y = 40+(8*(self.y+piece.localy))
             self.piecesGroup.draw(screen)
-            
+
         def stamp(self):
             for piece in self.pieces:
                 s = piece.sprite
@@ -361,7 +350,7 @@ class Shapes:
                 s.globaly = self.y+piece.localy
                 setTileonMap(self.x+piece.localx,self.y+piece.localy,self.id)
             self.makePieces()
-            
+
     I = shape('I','1','01x23')
     J = shape('J','0','01x2-  3')
     L = shape('L','2','01x2-3  ')
@@ -427,7 +416,7 @@ def clearLine(y: int):
     lines += 1
 
     demeter += 2
-    
+
     if demeter > 80:
         demeter = 80
 
@@ -438,16 +427,14 @@ def clearLine(y: int):
         if lvl < 9:
             speed -= 5
         elif lvl == 9:
-            speed -= 2
+            speed -= 3
         elif lvl in [10,13,16,19,29]:
-            speed -= 1
+            speed -= 2
         if lvl > 99:
             lvl = 99
             speed = 48
     if lines > 999:
         lines = 999
-    for i,pos in enumerate(tilesPlaced):
-        tilesPlaced[i] = (pos[0],pos[1]+8)
 
 def getCollision():
     global ghostShape,ghostCollided,collided,left_collided,right_collided
@@ -484,7 +471,7 @@ def getCollision():
                 y += 1
                 x = 0
             del tempMap
-    
+
     tempMap = deepcopy(tileMap)
     for piece in currentShape.pieces:
         x = currentShape.x+piece.localx
@@ -501,7 +488,7 @@ def getCollision():
                     elif not (tempMap[y+1][x] in 'x '):
                         collided = True
                 except: collided = True
-                
+
                 try:
                     if currentShape.x <= 0:
                         left_collided = True
@@ -610,7 +597,7 @@ timers['fall'].activate()
 timers['move'].deactivate()
 timers['soft down'].deactivate()
 timers['demeter'].deactivate()
-while running:  
+while running:
     deltaTime = clock.tick(frameRate) / 1000
     if not paused:
         for timer in timers.values():
