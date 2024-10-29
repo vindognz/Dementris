@@ -1,5 +1,7 @@
 # make whne you forgor it shows you the stack
 
+# only pep8 errors (shown with "autopep8 --recursive --in-place --pep8-passes 2000 --verbose main.py" are a lot of "line too long" and 1 "Dont use vars called I" - but that I is the shape name, so I can't change it)
+
 # ~ Imports ~ #
 import pygame
 from random import shuffle, randrange
