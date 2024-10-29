@@ -1,3 +1,5 @@
+# make whne you forgor it shows you the stack
+
 # ~ Imports ~ #
 import pygame
 from random import shuffle, randrange
@@ -242,7 +244,8 @@ class Shapes:
         class __piece:
             def __init__(self,image,id,localx,localy,pieceid) -> None:
                 self.sprite = pygame.sprite.Sprite()
-                self.sprite.image = pygame.image.load(f'images/pieces/{image}.png').convert_alpha()
+                self.sprite.image = pygame.Surface((8,8))
+                self.sprite.image.fill(image)
                 self.sprite.rect = self.sprite.image.get_rect()
                 self.pieceid = pieceid
                 self.id = id
@@ -254,7 +257,7 @@ class Shapes:
             self.id = id
             self.hitbox = hitbox
             self.base_hitbox = hitbox
-            self.piece_sprite = piece_sprite
+            self.piece_sprite = pygame.Color('#'+piece_sprite)
             self.rotation = 0
             self.x = 4
             self.y = 0
@@ -351,13 +354,13 @@ class Shapes:
                 setTileonMap(self.x+piece.localx,self.y+piece.localy,self.id)
             self.makePieces()
 
-    I = shape('I','1','01x23')
-    J = shape('J','0','01x2-  3')
-    L = shape('L','2','01x2-3  ')
-    O = shape('O','1','01-23')
-    S = shape('S','0',' 0x1-23 ')
-    T = shape('T','1','01x2- 3 ')
-    Z = shape('Z','2','01x - 23')
+    I = shape('I','808080','01x23')
+    J = shape('J','808080','01x2-  3')
+    L = shape('L','808080','01x2-3  ')
+    O = shape('O','808080','01-23')
+    S = shape('S','808080',' 0x1-23 ')
+    T = shape('T','808080','01x2- 3 ')
+    Z = shape('Z','808080','01x - 23')
 
     def __makeBag():
         out = list(all_shapes.values())
@@ -591,7 +594,7 @@ nextShape.rotation = 1
 nextShape.rotate(-1)
 holdShape = None
 holdCount = 0
-ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+ghostShape = Shapes.shape('G'+currentShape.id,'CCCCCC',currentShape.hitbox)
 
 timers['fall'].activate()
 timers['move'].deactivate()
@@ -749,7 +752,7 @@ while running:
                     nextShape.rotation = 1
                     nextShape.rotate(-1)
                     currentShape = nextShape
-                    ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+                    ghostShape = Shapes.shape('G'+currentShape.id,'CCCCCC',currentShape.hitbox)
                     nextShape = Shapes.fromBag()
                     nextAnimFrames = len(moveShapeAnimCurve)
                 else:
@@ -769,7 +772,7 @@ while running:
                     currentShape = holdShape
                     holdShape = temp
                     del temp
-                    ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+                    ghostShape = Shapes.shape('G'+currentShape.id,'CCCCCC',currentShape.hitbox)
                 holdCount += 1
                 getCollision()
                 holdAnimFrames = len(moveShapeAnimCurve)
@@ -822,7 +825,9 @@ while running:
             for tile in row:
                 if tile != '':
                     sprite = pygame.sprite.Sprite()
-                    sprite.image = pygame.image.load(f'images/pieces/{all_shapes[tile].piece_sprite}.png').convert_alpha()
+                    # sprite.image = pygame.image.load(f'images/pieces/{all_shapes[tile].piece_sprite}.png').convert_alpha()
+                    sprite.image = pygame.Surface((8,8))
+                    sprite.image.fill(all_shapes[tile].piece_sprite)
                     sprite.rect = sprite.image.get_rect()
                     sprite.globaly = y
                     stamps.append(((96+8*x,40+8*y),sprite))
@@ -903,15 +908,13 @@ while running:
             timers['fall'].activate()
         nextAnimFrames -= 1
 
-
-    if demeter == 80:
-        pygame.draw.rect(screen,"#00ff00", pygame.Rect(96, 211, demeter, 9))
-    else:
-        pygame.draw.rect(screen,"#f6b93b", pygame.Rect(96, 211, demeter, 9))
+    pygame.draw.rect(screen,"#404040", pygame.Rect(96, 211, demeter, 9))
 
     if paused and running:
         screen.blit(paused_overlay,(0,0))
     if not running:
+        dementia = False
+        drawStamps()
         screen.blit(death_overlay,(0,0))
 
     scaled = pygame.transform.scale(screen, display.get_size())
@@ -953,7 +956,7 @@ while running:
             nextShape.rotation = 1
             nextShape.rotate(-1)
             currentShape = nextShape
-            ghostShape = Shapes.shape('G'+currentShape.id,'ghost',currentShape.hitbox)
+            ghostShape = Shapes.shape('G'+currentShape.id,'CCCCCC',currentShape.hitbox)
             nextShape = Shapes.fromBag()
             nextAnimFrames = len(moveShapeAnimCurve)
             holdCount = 0
