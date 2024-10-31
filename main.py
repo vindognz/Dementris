@@ -2,6 +2,8 @@
 
 # only pep8 errors (shown with "autopep8 --recursive --in-place --pep8-passes 2000 --verbose main.py" are a lot of "line too long" and 1 "Dont use vars called I" - but that I is the shape name, so I can't change it)
 
+#sliding, top rots
+
 # ~ Imports ~ #
 import pygame
 from random import shuffle, randrange
@@ -28,16 +30,11 @@ pygame.display.set_icon(icon)
 screen = pygame.image.load('images/gui/bg.png').convert()
 paused_overlay = pygame.image.load('images/gui/paused.png').convert_alpha()
 death_overlay = pygame.image.load('images/gui/gameOver.png').convert_alpha()
-pivot_sprite = pygame.image.load('images/pieces/pivot.png').convert_alpha()
+pivot_sprite = pygame.Surface((8, 8), pygame.SRCALPHA)
+pivot_sprite.fill((255, 255, 255, 191))
 lvl_up_particle = pygame.image.load(
     'images/gui/lvlUpParticle.png').convert_alpha()
 
-pieces = [
-    pygame.image.load('images/pieces/0.png').convert_alpha(),
-    pygame.image.load('images/pieces/1.png').convert_alpha(),
-    pygame.image.load('images/pieces/2.png').convert_alpha(),
-    pygame.image.load('images/pieces/ghost.png').convert_alpha()
-]
 
 
 def getGraphValues(image_path):
@@ -76,6 +73,8 @@ controls = {
     'dementia': [pygame.K_x]
 }
 
+KONAMI_CODE = [pygame.K_UP, pygame.K_UP, pygame.K_DOWN, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_b, pygame.K_a]
+
 if osPath.isfile('controls.json'):
     jsonControls = jsonLoad(open('controls.json', 'r'))
     for id in controls.keys():
@@ -108,6 +107,9 @@ showPivot = True
 springConstant = 500
 damping = 10
 velocity = pygame.Vector2(0, 0)
+
+rainbow = False
+rainbow_col = (255,0,0)
 
 speed = 48
 doParticles = True
@@ -178,6 +180,15 @@ def flashStamps():
         else:
             pygame.draw.rect(screen, 'white', (pos[0], pos[1], 8, 8))
 
+def hsv_to_rgb( h:int, s:int, v:int, a:int=255 ) -> tuple:
+    out = pygame.Color(0)
+    out.hsva = (h,s,v,a)
+    return (out.r, out.g, out.b, out.a)
+
+def rgb_to_hsv( r:int, g:int, b:int, a:int=255 ) -> tuple:
+    out = pygame.Color(r,g,b,a)
+    return out.hsva
+
 # Draw Text
 
 
@@ -246,10 +257,10 @@ class DustParticles:
             self.age += 1
             self.x += self.x_vel
             self.y += self.y_vel
-            colored = self.img.copy()
+            colored = pygame.Surface((8, 8))
+            colored.fill(self.img)
             colored.fill(self.color, special_flags=pygame.BLEND_RGB_MULT)
-            sized = pygame.transform.scale(colored, ((dustParticleSizeCurve[self.age]*0.01)*self.img.get_width(
-            ), (dustParticleSizeCurve[self.age]*0.01)*self.img.get_height()))
+            sized = pygame.transform.scale(colored, ((dustParticleSizeCurve[self.age]*0.01)*8, (dustParticleSizeCurve[self.age]*0.01)*8))
             surface.blit(sized, (self.x-(sized.get_width()//2),
                          self.y-(sized.get_height()//2)))
 
@@ -398,13 +409,15 @@ class Shapes:
                 setTileonMap(self.x+piece.localx, self.y+piece.localy, self.id)
             self.makePieces()
 
-    I = shape('I', '808080', '01x23')
-    J = shape('J', '808080', '01x2-  3')
-    L = shape('L', '808080', '01x2-3  ')
-    O = shape('O', '808080', '01-23')
-    S = shape('S', '808080', ' 0x1-23 ')
-    T = shape('T', '808080', '01x2- 3 ')
-    Z = shape('Z', '808080', '01x - 23')
+    I = shape('I', 'ED4C67', '01x23')
+    J = shape('J', '0652DD', '01x2-  3')
+    L = shape('L', '009432', '01x2-3  ')
+    O = shape('O', 'FFC312', '01-23')
+    S = shape('S', 'D980FA', ' 0x1-23 ')
+    T = shape('T', '12CBC4', '01x2- 3 ')
+    Z = shape('Z', 'EE5A24', '01x - 23')
+
+# red, blue, green, yellow, purple, cyan, orange
 
     def __makeBag():
         out = list(all_shapes.values())
@@ -596,7 +609,8 @@ timers = {
     'fall': Timer(speed),
     'move': Timer(16),
     'soft down': Timer(2),
-    "demeter": Timer(0.5*60)
+    'demeter': Timer(0.5*60),
+    'konami': Timer(0.5*60)
 }
 # - Timers - #
 
@@ -652,21 +666,39 @@ holdShape = None
 holdCount = 0
 ghostShape = Shapes.shape('G'+currentShape.id, 'CCCCCC', currentShape.hitbox)
 
+code_index = 0
+
 timers['fall'].activate()
 timers['move'].deactivate()
 timers['soft down'].deactivate()
 timers['demeter'].deactivate()
+timers['konami'].deactivate()
 while running:
     deltaTime = clock.tick(frameRate) / 1000
     if not paused:
         for timer in timers.values():
             timer.update()
+    if timers['konami'].finished:
+        code_index = 0
     for event in pygame.event.get():
         # Detect window closed
         if event.type == pygame.QUIT:
             closed = True
             replay = False
         if event.type == pygame.KEYDOWN:
+            # RGB Gamer Logic
+            if event.key == KONAMI_CODE[code_index]:
+                timers['konami'].deactivate()
+                timers['konami'].activate()
+                code_index += 1
+				# checks if the full konami code has been entered
+                if code_index == len(KONAMI_CODE):
+                    rainbow = not rainbow
+                    code_index = 0  # reset to allow for multiple activations
+                    timers['konami'].deactivate()
+            else:
+                code_index = 0 # reset if a wrong key is pressed
+
             if event.key in controls['dementia']:
                 if not AREpaused:
                     # nuke
@@ -679,8 +711,7 @@ while running:
                             for tile in row:
                                 if tileMap[y][x] != '':
                                     tilesCleared += 1
-                                    dustParticles.append(DustParticles(8, 96+(8*x)+4, 40+(8*y)+4, pygame.image.load(
-                                        f'images/pieces/{all_shapes[tileMap[y][x]].piece_sprite}.png').convert_alpha()))
+                                    dustParticles.append(DustParticles(8, 96+(8*x)+4, 40+(8*y)+4, all_shapes[tileMap[y][x]].piece_sprite))
                                     tileMap[y][x] = ''
                                 x += 1
                             y += 1
@@ -709,6 +740,8 @@ while running:
 
             if event.key in controls['toggle pivot indicator']:
                 showPivot = not showPivot
+            if event.key == pygame.K_y:
+                rainbow = not rainbow
             if event.key in controls['pause']:
                 paused = not paused
             if event.key in controls['reset']:
@@ -984,8 +1017,16 @@ while running:
             timers['fall'].duration = speed
             timers['fall'].activate()
         nextAnimFrames -= 1
-
-    pygame.draw.rect(screen, "#404040", pygame.Rect(96, 211, demeter, 9))
+        
+    if rainbow:
+        pygame.draw.rect(screen, rainbow_col, pygame.Rect(96, 211, demeter, 9))
+        hsv = list(rgb_to_hsv(rainbow_col[0],rainbow_col[1],rainbow_col[2]))
+        hsv[0] += 2
+        if hsv[0] >= 360:
+            hsv[0] = 0
+        rainbow_col = hsv_to_rgb(hsv[0],hsv[1],hsv[2],100)
+    else:
+        pygame.draw.rect(screen, currentShape.piece_sprite, pygame.Rect(96, 211, demeter, 9))
 
     if paused and running:
         screen.blit(paused_overlay, (0, 0))
