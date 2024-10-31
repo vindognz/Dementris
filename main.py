@@ -442,7 +442,7 @@ def getInp(control_scheme):
             return True
     return False
 
-
+# github.com/jelyme/ helped write this function:
 def shakeScreen(force: pygame.Vector2):
     global offset, lastOffset, deltaTime, springConstant, damping, velocity
     if force.magnitude() == 0:
