@@ -21,7 +21,7 @@ clock = pygame.time.Clock()
 # Create window
 (display_width, display_height) = (256, 224)
 
-display = pygame.display.set_mode((3*display_width, 3*display_height))
+display = pygame.display.set_mode((3 * display_width, 3 * display_height))
 pygame.display.set_caption('PyTetris')
 icon = pygame.image.load('images/gui/icon.png').convert_alpha()
 pygame.display.set_icon(icon)
@@ -37,7 +37,7 @@ lvl_up_particle = pygame.image.load(
 
 
 def getGraphValues(image_path):
-    img = pygame.image.load('images/curves/'+image_path)
+    img = pygame.image.load('images/curves/' + image_path)
     img = img.convert()
     width, height = img.get_size()
     pixel_counts = []
@@ -159,8 +159,8 @@ stamps = []
 
 def drawStamps():
     for i in range(len(stamps)):
-        if not dementia or i < demeter/10+10:
-            stamps[i][1].image.set_alpha(round(max(0, (demeter/10+10)-i)*32))
+        if not dementia or i < demeter / 10 + 10:
+            stamps[i][1].image.set_alpha(round(max(0, (demeter / 10 + 10) - i) * 32))
             screen.blit(stamps[i][1].image, stamps[i][0])
         if not dementia:
             stamps[i][1].image.set_alpha(255)
@@ -174,7 +174,7 @@ flash_stamps = []
 
 def flashStamps():
     for pos, sprite in flash_stamps:
-        if AREpauseLength <= (TotalAREpauseLength/(2*AREFlashes)) or (AREpauseLength > (TotalAREpauseLength/(2*AREFlashes))*2 and AREpauseLength <= (TotalAREpauseLength/(2*AREFlashes))*3) or (AREpauseLength > (TotalAREpauseLength/(2*AREFlashes))*4 and AREpauseLength <= (TotalAREpauseLength/(2*AREFlashes))*5):
+        if AREpauseLength <= (TotalAREpauseLength / (2 * AREFlashes)) or (AREpauseLength > (TotalAREpauseLength / (2 * AREFlashes)) * 2 and AREpauseLength <= (TotalAREpauseLength / (2 * AREFlashes)) * 3) or (AREpauseLength > (TotalAREpauseLength / (2 * AREFlashes)) * 4 and AREpauseLength <= (TotalAREpauseLength / (2 * AREFlashes)) * 5):
             if not dementia:
                 screen.blit(sprite.image, pos)
         else:
@@ -196,12 +196,12 @@ def rgb_to_hsv(r: int, g: int, b: int, a: int = 255) -> tuple:
 
 def writeNums(pos: tuple, num: int, length: int, color=(255, 255, 255)):
     full_num = str(num)
-    full_num = (length-len(full_num))*'0'+full_num
+    full_num = (length - len(full_num)) * '0' + full_num
     i = 0
     for c in full_num:
         text = pygame.image.load(f'images/text/{c}.png').convert_alpha()
         text.fill(color, special_flags=pygame.BLEND_RGB_MULT)
-        screen.blit(text, (pos[0]+8*i, pos[1]))
+        screen.blit(text, (pos[0] + 8 * i, pos[1]))
         i += 1
 
 
@@ -225,10 +225,10 @@ class SpreadParticles:
             self.y += self.y_vel * self.gravity
             colored = self.img.copy()
             colored.fill(self.color, special_flags=pygame.BLEND_RGB_MULT)
-            sized = pygame.transform.scale(colored, ((spreadParticleSizeCurve[self.age]*0.01)*self.img.get_width(
-            ), (spreadParticleSizeCurve[self.age]*0.01)*self.img.get_height()))
-            surface.blit(sized, (self.x-(sized.get_width()//2),
-                         self.y-(sized.get_height()//2)))
+            sized = pygame.transform.scale(colored, ((spreadParticleSizeCurve[self.age] * 0.01) * self.img.get_width(
+            ), (spreadParticleSizeCurve[self.age] * 0.01) * self.img.get_height()))
+            surface.blit(sized, (self.x - (sized.get_width() // 2),
+                         self.y - (sized.get_height() // 2)))
 
     def __init__(self, amount, start_x, start_y, gravity_scale, img, color=(255, 255, 255)) -> None:
         self.particles = []
@@ -238,7 +238,7 @@ class SpreadParticles:
 
     def draw(self, surface):
         for particle in self.particles:
-            if particle.age >= len(spreadParticleSizeCurve)-1:
+            if particle.age >= len(spreadParticleSizeCurve) - 1:
                 self.particles.pop(self.particles.index(particle))
             else:
                 particle.draw(surface)
@@ -263,9 +263,9 @@ class DustParticles:
             colored.fill(self.img)
             colored.fill(self.color, special_flags=pygame.BLEND_RGB_MULT)
             sized = pygame.transform.scale(colored, ((
-                dustParticleSizeCurve[self.age]*0.01)*8, (dustParticleSizeCurve[self.age]*0.01)*8))
-            surface.blit(sized, (self.x-(sized.get_width()//2),
-                         self.y-(sized.get_height()//2)))
+                dustParticleSizeCurve[self.age] * 0.01) * 8, (dustParticleSizeCurve[self.age] * 0.01) * 8))
+            surface.blit(sized, (self.x - (sized.get_width() // 2),
+                         self.y - (sized.get_height() // 2)))
 
     def __init__(self, amount, start_x, start_y, img, color=(255, 255, 255)) -> None:
         self.particles = []
@@ -281,7 +281,7 @@ class DustParticles:
 
     def draw(self, surface):
         for particle in self.particles:
-            if particle.age >= len(spreadParticleSizeCurve)-1:
+            if particle.age >= len(spreadParticleSizeCurve) - 1:
                 self.particles.pop(self.particles.index(particle))
             else:
                 particle.draw(surface)
@@ -310,7 +310,7 @@ class Shapes:
             self.id = id
             self.hitbox = hitbox
             self.base_hitbox = hitbox
-            self.piece_sprite = pygame.Color('#'+piece_sprite)
+            self.piece_sprite = pygame.Color('#' + piece_sprite)
             self.rotation = 0
             self.x = 4
             self.y = 0
@@ -321,10 +321,10 @@ class Shapes:
                 self.gui_sprite = pygame.surface.Surface(
                     (33, 42), pygame.SRCALPHA)
                 shape_sprite = pygame.surface.Surface(
-                    (8*self.width, 8*self.height), pygame.SRCALPHA)
+                    (8 * self.width, 8 * self.height), pygame.SRCALPHA)
                 for piece in self.pieces:
                     shape_sprite.blit(piece.sprite.image,
-                                      (8*piece.localx, 8*piece.localy))
+                                      (8 * piece.localx, 8 * piece.localy))
                 rect = shape_sprite.get_rect()
                 rect.center = (17, 25)
                 self.gui_sprite.blit(shape_sprite, rect)
@@ -352,7 +352,7 @@ class Shapes:
                     self.centerPieceId = self.pieces[-1].id
                 maxWidth = max(maxWidth, x)
             self.width = maxWidth
-            self.height = self.hitbox.count('-')+1
+            self.height = self.hitbox.count('-') + 1
 
         def getCenterPiece(self):
             for piece in self.pieces:
@@ -400,16 +400,16 @@ class Shapes:
                 self.getCenterPiece().sprite.image = pygame.image.load(
                     f'images/pieces/{self.piece_sprite}.png').convert_alpha()
             for piece in self.pieces:
-                piece.sprite.rect.x = 96+(8*(self.x+piece.localx))
-                piece.sprite.rect.y = 40+(8*(self.y+piece.localy))
+                piece.sprite.rect.x = 96 + (8 * (self.x + piece.localx))
+                piece.sprite.rect.y = 40 + (8 * (self.y + piece.localy))
             self.piecesGroup.draw(screen)
 
         def stamp(self):
             for piece in self.pieces:
                 s = piece.sprite
-                s.globalx = self.x+piece.localx
-                s.globaly = self.y+piece.localy
-                setTileonMap(self.x+piece.localx, self.y+piece.localy, self.id)
+                s.globalx = self.x + piece.localx
+                s.globaly = self.y + piece.localy
+                setTileonMap(self.x + piece.localx, self.y + piece.localy, self.id)
             self.makePieces()
 
     I = shape('I', 'ED4C67', '01x23')
@@ -443,10 +443,12 @@ def getInp(control_scheme):
     return False
 
 # github.com/jelyme/ helped write this function:
+
+
 def shakeScreen(force: pygame.Vector2):
     global offset, lastOffset, deltaTime, springConstant, damping, velocity
     if force.magnitude() == 0:
-        velocity += (-springConstant*offset - damping * velocity) * deltaTime
+        velocity += (-springConstant * offset - damping * velocity) * deltaTime
     else:
         velocity = force * deltaTime
 
@@ -490,7 +492,7 @@ def clearLine(y: int):
         lvl += 1
         if doParticles:
             spreadParticles.append(SpreadParticles(
-                25, screen.get_width()//2, screen.get_height()//2, 0.2, lvl_up_particle))
+                25, screen.get_width() // 2, screen.get_height() // 2, 0.2, lvl_up_particle))
         if lvl < 9:
             speed -= 5
         elif lvl == 9:
@@ -513,26 +515,26 @@ def getCollision():
     right_collided = False
 
     ghostShape.x = currentShape.x
-    ghostShape.y = currentShape.y-1
-    ghostShape.rotation = currentShape.rotation-1
+    ghostShape.y = currentShape.y - 1
+    ghostShape.rotation = currentShape.rotation - 1
     ghostShape.rotate(1)
 
     while not ghostCollided:
         ghostShape.y += 1
-        if ghostShape.y == (20-ghostShape.height):
+        if ghostShape.y == (20 - ghostShape.height):
             ghostCollided = True
         else:
             tempMap = deepcopy(tileMap)
             for piece in ghostShape.pieces:
-                x = ghostShape.x+piece.localx
-                y = ghostShape.y+piece.localy
+                x = ghostShape.x + piece.localx
+                y = ghostShape.y + piece.localy
                 tempMap[y][x] = 'x'
             x = 0
             y = 0
             for row in tempMap:
                 for c in row:
                     if c == 'x':
-                        if not (tempMap[y+1][x] in 'x '):
+                        if not (tempMap[y + 1][x] in 'x '):
                             ghostCollided = True
                             break
                     x += 1
@@ -542,8 +544,8 @@ def getCollision():
 
     tempMap = deepcopy(tileMap)
     for piece in currentShape.pieces:
-        x = currentShape.x+piece.localx
-        y = currentShape.y+piece.localy
+        x = currentShape.x + piece.localx
+        y = currentShape.y + piece.localy
         tempMap[y][x] = 'x'
     x = 0
     y = 0
@@ -551,9 +553,9 @@ def getCollision():
         for c in row:
             if c == 'x':
                 try:
-                    if currentShape.y == (20-currentShape.height):
+                    if currentShape.y == (20 - currentShape.height):
                         collided = True
-                    elif not (tempMap[y+1][x] in 'x '):
+                    elif not (tempMap[y + 1][x] in 'x '):
                         collided = True
                 except e:
                     collided = True
@@ -561,15 +563,15 @@ def getCollision():
                 try:
                     if currentShape.x <= 0:
                         left_collided = True
-                    elif not (tempMap[y][x-1] in 'x '):
+                    elif not (tempMap[y][x - 1] in 'x '):
                         left_collided = True
                 except e:
                     left_collided = True
 
                 try:
-                    if currentShape.x >= 10-currentShape.width:
+                    if currentShape.x >= 10 - currentShape.width:
                         right_collided = True
-                    elif not (tempMap[y][x+1] in 'x '):
+                    elif not (tempMap[y][x + 1] in 'x '):
                         right_collided = True
                 except e:
                     right_collided = True
@@ -604,7 +606,7 @@ class Timer:
 
     def update(self):
         currentTime = pygame.time.get_ticks()
-        if self.active and currentTime - self.startTime >= (self.duration*(1000/60)):
+        if self.active and currentTime - self.startTime >= (self.duration * (1000 / 60)):
             self.deactivate()
 
 
@@ -612,8 +614,8 @@ timers = {
     'fall': Timer(speed),
     'move': Timer(16),
     'soft down': Timer(2),
-    'demeter': Timer(0.5*60),
-    'konami': Timer(0.5*60)
+    'demeter': Timer(0.5 * 60),
+    'konami': Timer(0.5 * 60)
 }
 # - Timers - #
 
@@ -667,7 +669,7 @@ nextShape.rotation = 1
 nextShape.rotate(-1)
 holdShape = None
 holdCount = 0
-ghostShape = Shapes.shape('G'+currentShape.id, 'CCCCCC', currentShape.hitbox)
+ghostShape = Shapes.shape('G' + currentShape.id, 'CCCCCC', currentShape.hitbox)
 
 code_index = 0
 
@@ -715,7 +717,7 @@ while running:
                                 if tileMap[y][x] != '':
                                     tilesCleared += 1
                                     dustParticles.append(DustParticles(
-                                        8, 96+(8*x)+4, 40+(8*y)+4, all_shapes[tileMap[y][x]].piece_sprite))
+                                        8, 96 + (8 * x) + 4, 40 + (8 * y) + 4, all_shapes[tileMap[y][x]].piece_sprite))
                                     tileMap[y][x] = ''
                                 x += 1
                             y += 1
@@ -725,7 +727,7 @@ while running:
                                     lvl += 1
                                     if doParticles:
                                         spreadParticles.append(SpreadParticles(
-                                            25, screen.get_width()//2, screen.get_height()//2, 0.2, lvl_up_particle))
+                                            25, screen.get_width() // 2, screen.get_height() // 2, 0.2, lvl_up_particle))
                                     if lvl < 9:
                                         speed -= 3
                                     elif lvl == 9:
@@ -762,20 +764,20 @@ while running:
                 i = True
                 out = False
                 for piece in currentShape.pieces:
-                    if getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) != '':
+                    if getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) == 'OUT' or getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) != '':
                         i = False
                         out = getTileonMap(
-                            currentShape.x+piece.localx, currentShape.y+piece.localy) == 'OUT'
+                            currentShape.x + piece.localx, currentShape.y + piece.localy) == 'OUT'
                         break
                 if (not i) and out:
                     oldX = currentShape.x
                     ii = False
                     for piece in currentShape.pieces:
-                        if currentShape.x+piece.localx >= 10:
-                            currentShape.x = 10-currentShape.width
+                        if currentShape.x + piece.localx >= 10:
+                            currentShape.x = 10 - currentShape.width
                             ii = True
                             break
-                        elif currentShape.x+piece.localx <= -1:
+                        elif currentShape.x + piece.localx <= -1:
                             currentShape.x = 0
                             ii = True
                             break
@@ -783,7 +785,7 @@ while running:
                         kicked = True
                         i = True
                         for piece in currentShape.pieces:
-                            if getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) != '':
+                            if getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) == 'OUT' or getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) != '':
                                 i = False
                                 break
                         if not i:
@@ -801,20 +803,20 @@ while running:
                 kicked = False
                 out = False
                 for piece in currentShape.pieces:
-                    if getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) != '':
+                    if getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) == 'OUT' or getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) != '':
                         i = False
                         out = getTileonMap(
-                            currentShape.x+piece.localx, currentShape.y+piece.localy) == 'OUT'
+                            currentShape.x + piece.localx, currentShape.y + piece.localy) == 'OUT'
                         break
                 if (not i) and out:
                     oldX = currentShape.x
                     ii = False
                     for piece in currentShape.pieces:
-                        if currentShape.x+piece.localx >= 10:
-                            currentShape.x = 10-currentShape.width
+                        if currentShape.x + piece.localx >= 10:
+                            currentShape.x = 10 - currentShape.width
                             ii = True
                             break
-                        elif currentShape.x+piece.localx <= -1:
+                        elif currentShape.x + piece.localx <= -1:
                             currentShape.x = 0
                             ii = True
                             break
@@ -822,7 +824,7 @@ while running:
                         kicked = True
                         i = True
                         for piece in currentShape.pieces:
-                            if getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) == 'OUT' or getTileonMap(currentShape.x+piece.localx, currentShape.y+piece.localy) != '':
+                            if getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) == 'OUT' or getTileonMap(currentShape.x + piece.localx, currentShape.y + piece.localy) != '':
                                 i = False
                                 break
                         if not i:
@@ -838,7 +840,7 @@ while running:
                 if holdShape is None:
                     holdAnim_mode = 'current to hold'
                     holdAnim_oldCurrentPos = (
-                        96+(8*(currentShape.x))+2, 40+(8*(currentShape.y))+10)
+                        96 + (8 * (currentShape.x)) + 2, 40 + (8 * (currentShape.y)) + 10)
                     holdAnim_oldCurrentRot = currentShape.rotation
                     currentShape.x = 4
                     currentShape.y = 0
@@ -851,18 +853,18 @@ while running:
                     nextShape.rotate(-1)
                     currentShape = nextShape
                     ghostShape = Shapes.shape(
-                        'G'+currentShape.id, 'CCCCCC', currentShape.hitbox)
+                        'G' + currentShape.id, 'CCCCCC', currentShape.hitbox)
                     nextShape = Shapes.fromBag()
                     nextAnimFrames = len(moveShapeAnimCurve)
                 else:
                     holdAnim_mode = 'swap'
                     holdAnim_oldCurrentPos = (
-                        96+(8*(currentShape.x))+2, 40+(8*(currentShape.y))+10)
+                        96 + (8 * (currentShape.x)) + 2, 40 + (8 * (currentShape.y)) + 10)
                     holdAnim_oldCurrentRot = currentShape.rotation
                     currentShape.x = 4
                     currentShape.y = 0
                     holdAnim_newCurrentPos = (
-                        96+(8*(currentShape.x))+2, 40+(8*(currentShape.y))+10)
+                        96 + (8 * (currentShape.x)) + 2, 40 + (8 * (currentShape.y)) + 10)
                     currentShape.rotation = 1
                     currentShape.rotate(-1)
                     holdShape.x = 4
@@ -874,7 +876,7 @@ while running:
                     holdShape = temp
                     del temp
                     ghostShape = Shapes.shape(
-                        'G'+currentShape.id, 'CCCCCC', currentShape.hitbox)
+                        'G' + currentShape.id, 'CCCCCC', currentShape.hitbox)
                 holdCount += 1
                 getCollision()
                 holdAnimFrames = len(moveShapeAnimCurve)
@@ -932,7 +934,7 @@ while running:
                     sprite.image.fill(all_shapes[tile].piece_sprite)
                     sprite.rect = sprite.image.get_rect()
                     sprite.globaly = y
-                    stamps.append(((96+8*x, 40+8*y), sprite))
+                    stamps.append(((96 + 8 * x, 40 + 8 * y), sprite))
                 x += 1
             y += 1
     drawStamps()
@@ -944,16 +946,16 @@ while running:
             running = False
             break
     if nextAnimFrames < 0:
-        screen.blit(nextShape.gui_sprite, (191+2, 95+10))
+        screen.blit(nextShape.gui_sprite, (191 + 2, 95 + 10))
     else:
         nextShapeGui_scaled = pygame.transform.scale(nextShape.gui_sprite.copy(
-        ), pygame.Vector2(33, 42)*(0.01*moveShapeAnimCurve[nextAnimFrames-1]))
+        ), pygame.Vector2(33, 42) * (0.01 * moveShapeAnimCurve[nextAnimFrames - 1]))
         screen.blit(nextShapeGui_scaled, pygame.Vector2(
-            193+15.5, 105+21)-(pygame.Vector2(nextShapeGui_scaled.get_size())/2))
+            193 + 15.5, 105 + 21) - (pygame.Vector2(nextShapeGui_scaled.get_size()) / 2))
     if holdAnimFrames < 0:
         if holdShape is not None:
             screen.blit(holdShape.gui_sprite,
-                        (80-holdShape.gui_sprite.get_width(), 95))
+                        (80 - holdShape.gui_sprite.get_width(), 95))
         if nextAnimFrames < 0:
             if show_ghost:
                 ghostShape.draw()
@@ -963,7 +965,7 @@ while running:
     layer1 = pygame.image.load('images/gui/bg.png').convert_alpha()
     screen.blit(layer1, (0, 0))
     screen.blit(layer3, (0, 0))
-    writeNums((59-11, 72), lines, 3)
+    writeNums((59 - 11, 72), lines, 3)
     writeNums((204, 72), lvl, 2)
 
     if doParticles:
@@ -985,38 +987,38 @@ while running:
         if holdAnimFrames > 0:
             if holdAnim_mode == 'current to hold':
                 diff = pygame.Vector2(
-                    holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(), 95)
+                    holdAnim_oldCurrentPos) - pygame.Vector2(80 - holdShape.gui_sprite.get_width(), 95)
                 rotDiff = 0
                 if holdAnim_oldCurrentRot >= 2:
-                    rotDiff = (90*holdAnim_oldCurrentRot)
+                    rotDiff = (90 * holdAnim_oldCurrentRot)
                 else:
-                    rotDiff = (-90*holdAnim_oldCurrentRot)
+                    rotDiff = (-90 * holdAnim_oldCurrentRot)
                 rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(
-                ), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
+                ), (moveShapeAnimCurve[len(moveShapeAnimCurve) - (holdAnimFrames)] * 0.01) * rotDiff)
                 screen.blit(rotated, holdAnim_oldCurrentPos -
-                            ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+                            ((moveShapeAnimCurve[holdAnimFrames - 1] * 0.01) * diff))
             elif holdAnim_mode == 'swap':
                 diff = pygame.Vector2(
-                    holdAnim_oldCurrentPos) - pygame.Vector2(80-holdShape.gui_sprite.get_width(), 95)
+                    holdAnim_oldCurrentPos) - pygame.Vector2(80 - holdShape.gui_sprite.get_width(), 95)
                 rotDiff = 0
                 if holdAnim_oldCurrentRot >= 2:
-                    rotDiff = (90*holdAnim_oldCurrentRot)
+                    rotDiff = (90 * holdAnim_oldCurrentRot)
                 else:
-                    rotDiff = (-90*holdAnim_oldCurrentRot)
+                    rotDiff = (-90 * holdAnim_oldCurrentRot)
                 rotated = pygame.transform.rotate(holdShape.gui_sprite.copy(
-                ), (moveShapeAnimCurve[len(moveShapeAnimCurve)-(holdAnimFrames)]*0.01)*rotDiff)
+                ), (moveShapeAnimCurve[len(moveShapeAnimCurve) - (holdAnimFrames)] * 0.01) * rotDiff)
                 screen.blit(rotated, holdAnim_oldCurrentPos -
-                            ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+                            ((moveShapeAnimCurve[holdAnimFrames - 1] * 0.01) * diff))
                 diff = pygame.Vector2(
-                    80-holdShape.gui_sprite.get_width(), 95) - pygame.Vector2(holdAnim_newCurrentPos)
+                    80 - holdShape.gui_sprite.get_width(), 95) - pygame.Vector2(holdAnim_newCurrentPos)
                 screen.blit(currentShape.gui_sprite, pygame.Vector2(
-                    80-holdShape.gui_sprite.get_width(), 95) - ((moveShapeAnimCurve[holdAnimFrames-1]*0.01)*diff))
+                    80 - holdShape.gui_sprite.get_width(), 95) - ((moveShapeAnimCurve[holdAnimFrames - 1] * 0.01) * diff))
         holdAnimFrames -= 1
     if not paused and nextAnimFrames >= 0:
         if nextAnimFrames > 0:
             diff = pygame.Vector2(193, 105) - (130, 50)
             screen.blit(currentShape.gui_sprite.copy(), (193, 105) -
-                        ((moveShapeAnimCurve[nextAnimFrames-1]*0.01)*diff))
+                        ((moveShapeAnimCurve[nextAnimFrames - 1] * 0.01) * diff))
         else:
             timers['fall'].duration = speed
             timers['fall'].activate()
@@ -1043,8 +1045,8 @@ while running:
     scaled = pygame.transform.scale(screen, display.get_size())
     shakeScreen(pygame.Vector2(0, 0))
     display.fill('black')
-    display.blit(scaled, (-8*(display.get_width() //
-                 screen.get_width())+offset[0]*100, offset[1]*100-50))
+    display.blit(scaled, (-8 * (display.get_width() //
+                 screen.get_width()) + offset[0] * 100, offset[1] * 100 - 50))
     pygame.display.flip()
 
     if (not paused) and (not AREpaused):
@@ -1069,7 +1071,7 @@ while running:
             if cleared:
                 clearLine(i)
                 cleared_count += 1
-                shakeScreen(pygame.Vector2(0, 10*thudForceCurve[thud]))
+                shakeScreen(pygame.Vector2(0, 10 * thudForceCurve[thud]))
             i += 1
 
         if collided and (timers['fall'].finished or getInp('hard down')):
@@ -1080,7 +1082,7 @@ while running:
             nextShape.rotate(-1)
             currentShape = nextShape
             ghostShape = Shapes.shape(
-                'G'+currentShape.id, 'CCCCCC', currentShape.hitbox)
+                'G' + currentShape.id, 'CCCCCC', currentShape.hitbox)
             nextShape = Shapes.fromBag()
             nextAnimFrames = len(moveShapeAnimCurve)
             holdCount = 0
@@ -1103,7 +1105,7 @@ while running:
             for pos, piece in stamps:
                 if piece.globaly < topBadY:
                     piece.globaly += linesCleared
-                    temp.append(((pos[0], pos[1]+8*linesCleared), piece))
+                    temp.append(((pos[0], pos[1] + 8 * linesCleared), piece))
                 else:
                     temp.append((pos, piece))
             flash_stamps = []
