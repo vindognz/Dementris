@@ -73,7 +73,7 @@ controls = {
 }
 
 KONAMI_CODE = [pygame.K_UP, pygame.K_UP, pygame.K_DOWN, pygame.K_DOWN, pygame.K_LEFT,
-               pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_b, pygame.K_a]
+               pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_b, pygame.K_a, pygame.K_SPACE]
 
 if osPath.isfile('controls.json'):
     jsonControls = jsonLoad(open('controls.json', 'r'))
@@ -1053,7 +1053,8 @@ while running:
         if not dementia and demeter > 0:
             if timers['demeter'].finished:
                 timers['demeter'].activate()
-                demeter -= 2
+                if not rainbow:
+                    demeter -= 2
         if demeter <= 0:
             demeter = 0
             dementia = True
