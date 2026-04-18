@@ -10,3 +10,6 @@ class Board():
     
     def set_tile(self, x, y, colour):
         self.grid[y][x] = colour
+
+    def is_shape_position_valid(self, shape_positions):
+        return all([0 <= x < self.width and 0 <= y < self.height for x, y in shape_positions])

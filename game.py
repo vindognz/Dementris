@@ -1,5 +1,6 @@
 import pygame
 from board import Board
+from shape import Shape
 
 GRID_WIDTH, GRID_HEIGHT = 10, 20
 WIDTH = 400
@@ -26,10 +27,9 @@ class Game:
         # init/reset run stuff here
         self.playing = True
         self.board = Board(GRID_WIDTH, GRID_HEIGHT)
-        self.board.set_tile(3, 5, (255, 0, 0))
-        self.board.set_tile(4, 5, (255, 0, 0))
-        self.board.set_tile(5, 5, (255, 0, 0))
-        self.board.set_tile(4, 4, (255, 0, 0))
+
+        self.color13rf = (255, 0, 0)
+        self.T = Shape('T', None, 4, 4, self.color13rf)
 
     def load_assets(self):
         # load all assets (sounds, images, etc.)
@@ -63,8 +63,16 @@ class Game:
                 
                 pygame.draw.rect(self.screen, (80, 80, 80), (x, y, TILE_SIZE, TILE_SIZE), 1)
 
+        for tilex, tiley in self.T.get_tiles():
+            pygame.draw.rect(self.screen, self.T.colour, (tilex * TILE_SIZE, tiley * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
         pygame.display.flip()
+
+    def try_move_shape(self, dx, dy):
+      new_tiles = self.T.get_tiles(dx, dy)
+      if self.board.is_shape_position_valid(new_tiles):
+          self.T.x += dx
+          self.T.y += dy
 
     def events(self):
         # events and all that
@@ -74,6 +82,15 @@ class Game:
                     self.playing = False
                 self.running = False
 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    self.try_move_shape(-1, 0)
+                elif event.key == pygame.K_RIGHT:
+                    self.try_move_shape(1, 0)
+                elif event.key == pygame.K_UP:
+                    self.try_move_shape(0, -1)
+                elif event.key == pygame.K_DOWN:
+                    self.try_move_shape(0, 1)
 
     def wait_for_key_screen(self, title: pygame.Surface, subtitle: pygame.Surface):
         waiting = True
