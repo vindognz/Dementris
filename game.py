@@ -108,6 +108,12 @@ class Game:
           self.current_shape.x += dx
           self.current_shape.y += dy
 
+    def try_rotate_shape(self, dr):
+        new_rotation = self.current_shape.rotation + dr
+        new_tiles = self.current_shape.get_tiles(rotation=new_rotation)
+        if self.board.is_shape_position_valid(new_tiles):
+            self.current_shape.rotation = new_rotation
+
     def events(self):
         # events and all that
         for event in pygame.event.get():
@@ -125,10 +131,15 @@ class Game:
                     self.try_move_shape(0, -1)
                 elif event.key == pygame.K_DOWN:
                     self.try_move_shape(0, 1)
+
+                elif event.key == pygame.K_z:
+                    self.try_rotate_shape(-1)
+                elif event.key == pygame.K_x:
+                    self.try_rotate_shape(1)
                 
                 elif event.key == pygame.K_SPACE:
                     self.stamp_shape(self.current_shape)
-                    self.init_new_shape()
+                    self.init_new_shape()                
 
     def wait_for_key_screen(self, title: pygame.Surface, subtitle: pygame.Surface):
         waiting = True
