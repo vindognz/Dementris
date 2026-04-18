@@ -37,6 +37,8 @@ class Game:
         self.dt = 0
         self.unused_shapes = SHAPES.copy()
         self.current_shape = None
+        self.fall_timer = 0
+        self.fall_delay = 0.5
 
     def get_new_shape(self):
         if len(self.unused_shapes) == 0:
@@ -74,7 +76,16 @@ class Game:
 
     def update(self):
         # update game stuff
-        pass
+        self.fall_timer += self.dt
+        if self.fall_timer >= self.fall_delay:
+            self.fall_timer = 0
+
+            new_tiles = self.current_shape.get_tiles(dy=1)
+            if self.board.is_shape_position_valid(new_tiles):
+                self.current_shape.y += 1
+            else:
+                self.stamp_shape(self.current_shape)
+                self.init_new_shape()
 
     def stamp_shape(self, shape: Shape):
         shape_tiles = shape.get_tiles()
@@ -123,23 +134,24 @@ class Game:
                 self.running = False
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.try_move_shape(-1, 0)
-                elif event.key == pygame.K_RIGHT:
-                    self.try_move_shape(1, 0)
-                elif event.key == pygame.K_UP:
-                    self.try_move_shape(0, -1)
-                elif event.key == pygame.K_DOWN:
-                    self.try_move_shape(0, 1)
+                match event.key:
+                    case pygame.K_LEFT:
+                        self.try_move_shape(-1, 0)
+                    case pygame.K_RIGHT:
+                        self.try_move_shape(1, 0)
+                    case pygame.K_UP:
+                        self.try_move_shape(0, -1)
+                    case pygame.K_DOWN:
+                        self.try_move_shape(0, 1)
 
-                elif event.key == pygame.K_z:
-                    self.try_rotate_shape(-1)
-                elif event.key == pygame.K_x:
-                    self.try_rotate_shape(1)
-                
-                elif event.key == pygame.K_SPACE:
-                    self.stamp_shape(self.current_shape)
-                    self.init_new_shape()                
+                    case pygame.K_z:
+                        self.try_rotate_shape(-1)
+                    case pygame.K_x:
+                        self.try_rotate_shape(1)
+                    
+                    case pygame.K_SPACE:
+                        self.stamp_shape(self.current_shape)
+                        self.init_new_shape()                
 
     def wait_for_key_screen(self, title: pygame.Surface, subtitle: pygame.Surface):
         waiting = True

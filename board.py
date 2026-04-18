@@ -12,4 +12,11 @@ class Board():
         self.grid[y][x] = colour
 
     def is_shape_position_valid(self, shape_positions):
-        return all([0 <= x < self.width and 0 <= y < self.height for x, y in shape_positions])
+        return all(
+            0 <= x < self.width
+            and 0 <= y < self.height
+            and self.is_tile_free(x, y)
+            for x, y in shape_positions
+    )
+
+    
