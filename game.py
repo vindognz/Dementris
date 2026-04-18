@@ -1,7 +1,10 @@
 import pygame
+from board import Board
 
-WIDTH = 600
-HEIGHT = 800
+GRID_WIDTH, GRID_HEIGHT = 10, 20
+WIDTH = 400
+TILE_SIZE = WIDTH // GRID_WIDTH
+HEIGHT = TILE_SIZE * GRID_HEIGHT
 FPS = 60
 TITLE = "Dementris"
 
@@ -20,8 +23,13 @@ class Game:
         self.dt = 0
 
     def new(self):
-        # reset run stuff here
+        # init/reset run stuff here
         self.playing = True
+        self.board = Board(GRID_WIDTH, GRID_HEIGHT)
+        self.board.set_tile(3, 5, (255, 0, 0))
+        self.board.set_tile(4, 5, (255, 0, 0))
+        self.board.set_tile(5, 5, (255, 0, 0))
+        self.board.set_tile(4, 4, (255, 0, 0))
 
     def load_assets(self):
         # load all assets (sounds, images, etc.)
@@ -43,6 +51,18 @@ class Game:
     def draw(self):
         # draw everything
         self.screen.fill((0, 0, 0))
+
+        for row in range(self.board.height):
+            for col in range(self.board.width):
+                x = col * TILE_SIZE
+                y = row * TILE_SIZE
+                tile = self.board.grid[row][col]
+
+                if tile is not None:
+                    pygame.draw.rect(self.screen, tile, (x, y, TILE_SIZE, TILE_SIZE))
+                
+                pygame.draw.rect(self.screen, (80, 80, 80), (x, y, TILE_SIZE, TILE_SIZE), 1)
+
 
         pygame.display.flip()
 
@@ -92,3 +112,6 @@ class Game:
         # game over screen or restart or smth
 
         pass
+
+if __name__ == "__main__":
+    print("doofus. run main.py.")
