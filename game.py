@@ -1,13 +1,26 @@
 import pygame
+import random
 from board import Board
 from shape import Shape
+
 
 GRID_WIDTH, GRID_HEIGHT = 10, 20
 WIDTH = 400
 TILE_SIZE = WIDTH // GRID_WIDTH
 HEIGHT = TILE_SIZE * GRID_HEIGHT
 FPS = 60
-TITLE = "Dementris"
+TITLE = "Dementris v2 (i cant see this bc hyprland so boo hoo)"
+
+# IJLOSTZ
+SHAPES = [
+    ('I', (255, 0,   0)),
+    ('J', (0,   255, 0)),
+    ('L', (0,   0,   255)),
+    ('O', (255, 255, 0)),
+    ('S', (255, 0,   255)),
+    ('T', (0,   255, 255)),
+    ('Z', (255,   255, 255))
+]
 
 
 class Game:
@@ -22,14 +35,29 @@ class Game:
         self.running = True
         self.playing = False
         self.dt = 0
+        self.unused_shapes = SHAPES.copy()
+        self.current_shape = None
+
+    def get_new_shape(self):
+        if len(self.unused_shapes) == 0:
+            self.unused_shapes = SHAPES.copy()
+
+        shape_id, colour = random.choice(self.unused_shapes)
+        self.unused_shapes.remove((shape_id, colour))
+
+        return Shape(shape_id, 0, 4, 4, colour)
+    
+    def init_new_shape(self):
+        self.current_shape = self.get_new_shape()
+        self.current_shape.x = GRID_WIDTH // 2 - 1
+        self.current_shape.y = 1
 
     def new(self):
         # init/reset run stuff here
         self.playing = True
         self.board = Board(GRID_WIDTH, GRID_HEIGHT)
 
-        self.color13rf = (255, 0, 0)
-        self.T = Shape('T', None, 4, 4, self.color13rf)
+        self.init_new_shape()
 
     def load_assets(self):
         # load all assets (sounds, images, etc.)
@@ -48,6 +76,12 @@ class Game:
         # update game stuff
         pass
 
+    def stamp_shape(self, shape: Shape):
+        shape_tiles = shape.get_tiles()
+
+        for x, y in shape_tiles:
+            self.board.grid[y][x] = shape.colour
+
     def draw(self):
         # draw everything
         self.screen.fill((0, 0, 0))
@@ -63,16 +97,16 @@ class Game:
                 
                 pygame.draw.rect(self.screen, (80, 80, 80), (x, y, TILE_SIZE, TILE_SIZE), 1)
 
-        for tilex, tiley in self.T.get_tiles():
-            pygame.draw.rect(self.screen, self.T.colour, (tilex * TILE_SIZE, tiley * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+        for tilex, tiley in self.current_shape.get_tiles():
+            pygame.draw.rect(self.screen, self.current_shape.colour, (tilex * TILE_SIZE, tiley * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
         pygame.display.flip()
 
     def try_move_shape(self, dx, dy):
-      new_tiles = self.T.get_tiles(dx, dy)
+      new_tiles = self.current_shape.get_tiles(dx, dy)
       if self.board.is_shape_position_valid(new_tiles):
-          self.T.x += dx
-          self.T.y += dy
+          self.current_shape.x += dx
+          self.current_shape.y += dy
 
     def events(self):
         # events and all that
@@ -91,6 +125,10 @@ class Game:
                     self.try_move_shape(0, -1)
                 elif event.key == pygame.K_DOWN:
                     self.try_move_shape(0, 1)
+                
+                elif event.key == pygame.K_SPACE:
+                    self.stamp_shape(self.current_shape)
+                    self.init_new_shape()
 
     def wait_for_key_screen(self, title: pygame.Surface, subtitle: pygame.Surface):
         waiting = True
