@@ -19,4 +19,19 @@ class Board():
             for x, y in shape_positions
     )
 
+    def find_full_rows(self): # holy clean btw
+        return [
+            i
+            for i, row in enumerate(self.grid)
+            if all(row)
+        ]
     
+    def clear_full_rows(self):
+        new_grid = [row for row in self.grid if not all(row)]
+        cleared = self.height - len(new_grid)
+
+        for _ in range(cleared):
+            new_grid.insert(0, [None for _ in range(self.width)])
+
+        self.grid = new_grid
+        return cleared

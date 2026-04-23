@@ -25,7 +25,9 @@ SHAPES = [
 
 class Game:
     def __init__(self):
+        # inits
         pygame.init()
+        random.seed()
 
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption(TITLE)
@@ -35,17 +37,21 @@ class Game:
         self.running = True
         self.playing = False
         self.dt = 0
-        self.unused_shapes = SHAPES.copy()
+        self.unused_shapes = self.generate_new_bag()
         self.current_shape = None
         self.fall_timer = 0
         self.fall_delay = 0.5
 
+    def generate_new_bag(self):
+        bag = SHAPES.copy()
+        random.shuffle(bag)
+        return bag
+
     def get_new_shape(self):
         if len(self.unused_shapes) == 0:
-            self.unused_shapes = SHAPES.copy()
+            self.unused_shapes = self.generate_new_bag()
 
-        shape_id, colour = random.choice(self.unused_shapes)
-        self.unused_shapes.remove((shape_id, colour))
+        shape_id, colour = self.unused_shapes.pop(0)
 
         return Shape(shape_id, 0, 4, 4, colour)
     
@@ -76,6 +82,8 @@ class Game:
 
     def update(self):
         # update game stuff
+
+        # gravity
         self.fall_timer += self.dt
         if self.fall_timer >= self.fall_delay:
             self.fall_timer = 0
@@ -85,9 +93,13 @@ class Game:
                 self.current_shape.y += 1
             else:
                 self.stamp_shape(self.current_shape)
+
+                cleared = self.board.clear_full_rows()
+
                 self.init_new_shape()
 
     def stamp_shape(self, shape: Shape):
+        # stamp the shape
         shape_tiles = shape.get_tiles()
 
         for x, y in shape_tiles:
@@ -114,12 +126,14 @@ class Game:
         pygame.display.flip()
 
     def try_move_shape(self, dx, dy):
+      # execute a move if it is valid
       new_tiles = self.current_shape.get_tiles(dx, dy)
       if self.board.is_shape_position_valid(new_tiles):
           self.current_shape.x += dx
           self.current_shape.y += dy
 
     def try_rotate_shape(self, dr):
+        # execute a rotation if it is valid
         new_rotation = self.current_shape.rotation + dr
         new_tiles = self.current_shape.get_tiles(rotation=new_rotation)
         if self.board.is_shape_position_valid(new_tiles):
@@ -149,10 +163,6 @@ class Game:
                     case pygame.K_x:
                         self.try_rotate_shape(1)
                     
-                    case pygame.K_SPACE:
-                        self.stamp_shape(self.current_shape)
-                        self.init_new_shape()                
-
     def wait_for_key_screen(self, title: pygame.Surface, subtitle: pygame.Surface):
         waiting = True
         title_rect = None
